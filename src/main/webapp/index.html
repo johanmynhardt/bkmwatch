@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>BKM Watch Patroller Alerts</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.13/angular.min.js"></script>
+
+    <script type="application/javascript">
+
+        angular.module('app', [])
+                .controller('AlertController', ['$scope', function($scope){
+                    $scope.items = [{name:'foo'}]
+                }]);
+    </script>
+</head>
+<body>
+
+<div ng-view>
+    <div ng-controller="AlertController">
+        <div ng-repeat="item in items">
+            {{item}}
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
