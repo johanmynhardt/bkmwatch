@@ -37,4 +37,9 @@ public class RecordRest {
 
         return alertDb.getAllRecords(page, itemsPerPage, update);
     }
+
+    @RequestMapping("search")
+    public List<PatrollerAlertRecord> searchAlerts(@RequestParam String search) {
+        return alertDb.search(search);
+    }
 }

@@ -3,6 +3,7 @@ package za.co.johanmynhardt.bkmwatch.parser;
 import com.google.common.collect.Sets;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -45,15 +46,24 @@ public class PatrollerAlertParserTest {
     @Autowired
     private PatrollerAlertPoller poller;
 
+    @Autowired
+    private PatrollerAlertParser parser;
+
+    @Value("${resourceFile}")
+    String resourceFile;
+
+    @Value("${baseUrl}")
+    String baseUrl;
+
     @SuppressWarnings("unchecked")
     @org.junit.Test
     public void testParse() throws Exception {
 
         File file = new File("/home/johan/bkmwatch");
 
-        final String baseUrl = "http://bkmwatch.org.za/mobile/PatrollerAlerts.php";
-        int page = 0;
-        int max = 2;
+        final String baseUrl = this.baseUrl;
+        int page = -1;
+        int max = 622;
 
         do {
             Set<PatrollerAlertRecord> records = readExistingList(file);
@@ -61,6 +71,8 @@ public class PatrollerAlertParserTest {
 
             PatrollerAlertParser.AlertPageResult pageResult = poller.pollUrl(baseUrl+("?pagenum="+ ++page));
             //max = pageResult.links.stream().filter((link)->{link.text.contains("last")}).map((link)->link.)
+
+            System.out.println("page results = " + pageResult.records.size());
 
             if (records.containsAll(pageResult.records)) {
                 System.out.println("No new records found.");
@@ -76,6 +88,13 @@ public class PatrollerAlertParserTest {
             }
 
         } while (page < max);
+    }
+
+    @Test
+    public void Parse() throws IOException {
+        final PatrollerAlertParser.AlertPageResult parse = parser.parse(PatrollerAlertParserTest.class.getResourceAsStream("/html/PatrollerAlerts.html"));
+
+        System.out.println("parse = " + parse.records.size());
     }
 
     private Set<PatrollerAlertRecord> readExistingList(File file) throws IOException, ClassNotFoundException {

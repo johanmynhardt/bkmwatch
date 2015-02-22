@@ -1,5 +1,7 @@
 package za.co.johanmynhardt.bkmwatch.model;
 
+import za.co.johanmynhardt.bkmwatch.parser.PatrollerAlertParser;
+
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,6 +46,21 @@ public class PatrollerAlertRecord implements Serializable,  Comparable<Patroller
         }
 
         return new PatrollerAlertRecord(date, recordFields[2]);
+    }
+
+    public static PatrollerAlertRecord fromLine0(String line) {
+        //System.out.println("line = " + line);
+
+        String[] recordFields = line.split(": ", 2);
+
+        Date date = null;
+        try {
+            date = SIMPLE_DATE_FORMAT.parse(recordFields[0]);
+        } catch (ParseException e) {
+            org.slf4j.LoggerFactory.getLogger(PatrollerAlertRecord.class).error("Error", e);
+        }
+
+        return new PatrollerAlertRecord(date, recordFields[1]);
     }
 
     public Date getDate() {

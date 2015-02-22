@@ -3,9 +3,13 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>BKM Watch Patroller Alerts</title>
+    <link rel="stylesheet" href="bower_components/foundation/css/foundation.css"/>
+    <link rel="stylesheet" href="bower_components/foundation/css/normalize.css"/>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/angular-resource/angular-resource.js"></script>
     <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="bower_components/foundation/js/foundation.js"></script>
 
     <script type="application/javascript">
 
@@ -14,45 +18,76 @@
             return $resource('record/alerts', {}, {'query': {method: 'GET', isArray: true}});
         });
 
+        var dbSearch = app.factory('dbSearch', function ($resource) {
+            return $resource('record/search', {}, {'query': {method: 'GET', isArray: true}});
+        });
+
         app.controller('AlertController', function ($scope, $log, $route, $routeParams, $location, dbService) {
 
             $log.debug("routeParams=" + JSON.stringify($routeParams));
             $log.debug("location=" + JSON.stringify($location));
 
-            $scope.items = dbService.query({page:$routeParams.page, itemsPerPage: $routeParams.itemsPerPage});
+            $scope.items = dbService.query({page: $routeParams.page, itemsPerPage: $routeParams.itemsPerPage});
 
             $scope.next = function () {
                 $log.debug("next...");
-                var next = parseInt($routeParams.page!=undefined ? $routeParams.page : 0)+1;
-                $location.path('/'+next).search({itemsPerPage:$routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
+                var next = parseInt($routeParams.page != undefined ? $routeParams.page : 0) + 1;
+                $location.path('/browse/' + next).search({itemsPerPage: $routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
             };
 
-            $scope.previous = function() {
+            $scope.previous = function () {
                 $log.debug("previous...");
-                var prev = parseInt($routeParams.page!=undefined ? $routeParams.page : 1) - 1;
-                $location.path('/'+ prev).search({itemsPerPage:$routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
+                var prev = parseInt($routeParams.page != undefined ? $routeParams.page : 1) - 1;
+                $location.path('/browse/' + prev).search({itemsPerPage: $routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
             };
         });
 
-        app.config(function($routeProvider, $locationProvider){
+        app.controller('SearchController', function ($scope, $log, dbSearch) {
+            $scope.search = "";
+
+            $scope.items = [];
+
+            $scope.doSearch = function () {
+                $log.debug("search for " + $scope.search);
+
+                $scope.items = dbSearch.query({search: $scope.search});
+            }
+        });
+
+        app.config(function ($routeProvider, $locationProvider) {
             $routeProvider.when('/', {
                 templateUrl: 'view/home.html',
                 controller: 'AlertController'
-            }).when('/:page', {
-                templateUrl: 'view/home.html',
+            }).when('/browse', {
+                templateUrl: 'view/browse.html',
                 controller: 'AlertController'
-            }).when('/:page/:itemsPerPage', {
-                templateUrl: 'view/home.html',
+            }).when('/browse/:page', {
+                templateUrl: 'view/browse.html',
                 controller: 'AlertController'
+            }).when('/browse/:page/:itemsPerPage', {
+                templateUrl: 'view/browse.html',
+                controller: 'AlertController'
+            }).when('/search', {
+                templateUrl: 'view/search.html',
+                controller: 'SearchController'
             });
         });
     </script>
 </head>
 <body>
 
-<div ng-view>
+<div class="row">
+    <ul class="breadcrumbs">
+        <li><a href="#/">Home</a></li>
+        <li><a href="#/browse">Browse</a></li>
+        <li><a href="#/search">Search</a></li>
+    </ul>
 
+    <div ng-view>
+
+    </div>
 </div>
+
 
 </body>
 </html>

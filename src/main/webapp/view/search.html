@@ -1,0 +1,27 @@
+<h2>Search</h2>
+
+<div class="panel">
+
+    <p>Search by Keyword</p>
+
+    <div>
+        <input type="text" ng-model="search" name="search"/>
+        <button ng-click="doSearch();">Search</button>
+    </div>
+
+    <table class="table-view" width="100%">
+        <thead>
+        <tr>
+            <td width="200">Date</td>
+            <td>Message</td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="item in items">
+            <td>{{item.date | date}}</td>
+            <td>{{item.message}}</td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>

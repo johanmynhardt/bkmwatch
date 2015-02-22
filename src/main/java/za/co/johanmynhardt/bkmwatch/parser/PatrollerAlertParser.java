@@ -9,17 +9,13 @@ import org.jsoup.nodes.Element;
 
 import za.co.johanmynhardt.bkmwatch.model.PatrollerAlertRecord;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -67,20 +63,22 @@ public class PatrollerAlertParser {
 
         Preconditions.checkNotNull(inputStream);
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        /*BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-        String line;
+        String line;*/
 
         AlertPageResult pageResult = new AlertPageResult();
 
-        while ((line = reader.readLine()) != null) {
+        pageResult.records = parseThroughJsoup(inputStream);
+
+        /*while ((line = reader.readLine()) != null) {
             if (line.contains("Date:")) {
                 pageResult.records = parseRecords(line);
             }
             if (line.contains("href=")) {
                 pageResult.links.addAll(parseLinks(line));;
             }
-        }
+        }*/
         return pageResult;
     }
 
@@ -92,6 +90,18 @@ public class PatrollerAlertParser {
                 .map((item) -> Jsoup.parse(item).text())
                 .map(PatrollerAlertRecord::fromLine)
                 .filter((item)-> item != null)
+                .collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    private TreeSet<PatrollerAlertRecord> parseThroughJsoup(InputStream inputStream) throws IOException {
+        final String parsedResult = Jsoup.parse(inputStream, "utf-8", "").text().replaceAll("\\s+", " ");
+        final String toUse = parsedResult.substring(parsedResult.indexOf("Date: "), parsedResult.lastIndexOf("--Page"));
+
+        return Arrays.asList(toUse.split("Date: "))
+                .stream()
+                .filter((it) -> it != null && !it.isEmpty())
+                .map(PatrollerAlertRecord::fromLine0)
+                .filter((ite) -> ite != null)
                 .collect(Collectors.toCollection(TreeSet::new));
     }
 
