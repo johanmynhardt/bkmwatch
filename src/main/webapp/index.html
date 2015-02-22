@@ -9,23 +9,49 @@
 
     <script type="application/javascript">
 
-        var app = angular.module('app', ['ngResource']);
+        var app = angular.module('app', ['ngResource', 'ngRoute']);
         var dbService = app.factory('dbService', function ($resource) {
             return $resource('record/alerts', {}, {'query': {method: 'GET', isArray: true}});
         });
-        app.controller('AlertController', function ($scope, dbService) {
-            $scope.items = dbService.query();
+
+        app.controller('AlertController', function ($scope, $log, $route, $routeParams, $location, dbService) {
+
+            $log.debug("routeParams=" + JSON.stringify($routeParams));
+            $log.debug("location=" + JSON.stringify($location));
+
+            $scope.items = dbService.query({page:$routeParams.page, itemsPerPage: $routeParams.itemsPerPage});
+
+            $scope.next = function () {
+                $log.debug("next...");
+                var next = parseInt($routeParams.page!=undefined ? $routeParams.page : 0)+1;
+                $location.path('/'+next).search({itemsPerPage:$routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
+            };
+
+            $scope.previous = function() {
+                $log.debug("previous...");
+                var prev = parseInt($routeParams.page!=undefined ? $routeParams.page : 1) - 1;
+                $location.path('/'+ prev).search({itemsPerPage:$routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
+            };
+        });
+
+        app.config(function($routeProvider, $locationProvider){
+            $routeProvider.when('/', {
+                templateUrl: 'view/home.html',
+                controller: 'AlertController'
+            }).when('/:page', {
+                templateUrl: 'view/home.html',
+                controller: 'AlertController'
+            }).when('/:page/:itemsPerPage', {
+                templateUrl: 'view/home.html',
+                controller: 'AlertController'
+            });
         });
     </script>
 </head>
 <body>
 
 <div ng-view>
-    <div ng-controller="AlertController">
-        <div ng-repeat="item in items">
-            {{item}}
-        </div>
-    </div>
+
 </div>
 
 </body>

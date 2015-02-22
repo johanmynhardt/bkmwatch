@@ -1,0 +1,20 @@
+<h2>Home</h2>
+
+This is home :)
+
+<div>
+
+    <div>
+        <button ng-click="previous();">&leftarrow; prev</button>
+        <button ng-click="next();">next &rightarrow;</button>
+    </div>
+
+
+    <ul>
+        <li ng-repeat="item in items">
+            <div >
+                {{item.date | date}}: {{item.message}}
+            </div>
+        </li>
+    </ul>
+</div>
