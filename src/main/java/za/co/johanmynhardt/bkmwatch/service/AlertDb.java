@@ -99,7 +99,7 @@ public class AlertDb {
     private void saveBackingSet(Set<PatrollerAlertRecord> records) throws IOException {
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File(fileName)))) {
             objectOutputStream.writeObject(records);
-            System.out.println("Wrote " + fileName);
+            LOG.debug("Wrote " + fileName);
         }
     }
 
