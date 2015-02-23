@@ -25,6 +25,7 @@ public class PatrollerAlertPoller {
         LOG.debug("polling url = " + url);
 
         final PatrollerAlertParser.AlertPageResult result = parser.parse(new URL(url).openStream());
+        LOG.debug("returning result={}", result.getRecords().size());
         return result;
     }
 }

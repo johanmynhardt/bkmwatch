@@ -50,6 +50,10 @@ public class PatrollerAlertParser {
             }
         }
 
+        public Set<PatrollerAlertRecord> getRecords() {
+            return records;
+        }
+
         @Override
         public String toString() {
             return "AlertPageResult{" +

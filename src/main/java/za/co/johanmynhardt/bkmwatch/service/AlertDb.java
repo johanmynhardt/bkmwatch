@@ -11,11 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import za.co.johanmynhardt.bkmwatch.model.PatrollerAlertRecord;
+import za.co.johanmynhardt.bkmwatch.parser.PatrollerAlertParser;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,7 +55,22 @@ public class AlertDb {
     private void updateBacking(boolean update) throws IOException, ClassNotFoundException {
         if (backingSet.isEmpty() || update) {
             if (update) {
-                poller.pollUrl(baseUrl);
+                final PatrollerAlertParser.AlertPageResult pageResult = poller.pollUrl(baseUrl);
+
+                for (PatrollerAlertRecord patrollerAlertRecord : pageResult.getRecords()) {
+                    LOG.trace("retrieved record={}", patrollerAlertRecord);
+                }
+
+                if (!backingSet.containsAll(pageResult.getRecords())) {
+                    final Sets.SetView<PatrollerAlertRecord> difference = Sets.difference(pageResult.getRecords(), backingSet);
+                    if (difference.size() > 5) {
+                        System.out.println("New records: " + difference.size());
+                    } else {
+                        System.out.println("New records: " + difference);
+                    }
+                    backingSet.addAll(pageResult.getRecords());
+                    saveBackingSet(backingSet);
+                }
             }
             readExistingList(true);
         }
@@ -76,6 +94,13 @@ public class AlertDb {
         }
 
         return new LinkedHashSet<>(backingSet);
+    }
+
+    private void saveBackingSet(Set<PatrollerAlertRecord> records) throws IOException {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File(fileName)))) {
+            objectOutputStream.writeObject(records);
+            System.out.println("Wrote " + fileName);
+        }
     }
 
     public List<PatrollerAlertRecord> search(String search) {
