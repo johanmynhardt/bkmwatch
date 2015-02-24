@@ -32,7 +32,7 @@
             }
         });
 
-        app.controller('AlertController', function ($scope, $log, $route, $routeParams, $location, dbService) {
+        app.controller('BrowseController', function ($scope, $log, $route, $routeParams, $location, dbService) {
 
             $log.debug("routeParams=" + JSON.stringify($routeParams));
             $log.debug("location=" + JSON.stringify($location));
@@ -50,6 +50,11 @@
                 var prev = parseInt($routeParams.page != undefined ? $routeParams.page : 1) - 1;
                 $location.path('/browse/' + prev).search({itemsPerPage: $routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
             };
+
+            $scope.showPrevious = function() {
+                return $routeParams.page > 0;
+            };
+
         });
 
         app.controller('SearchController', function ($scope, $log, dbSearch) {
@@ -67,16 +72,16 @@
         app.config(function ($routeProvider, $locationProvider) {
             $routeProvider.when('/', {
                 templateUrl: 'view/home.html',
-                controller: 'AlertController'
+                controller: 'BrowseController'
             }).when('/browse', {
                 templateUrl: 'view/browse.html',
-                controller: 'AlertController'
+                controller: 'BrowseController'
             }).when('/browse/:page', {
                 templateUrl: 'view/browse.html',
-                controller: 'AlertController'
+                controller: 'BrowseController'
             }).when('/browse/:page/:itemsPerPage', {
                 templateUrl: 'view/browse.html',
-                controller: 'AlertController'
+                controller: 'BrowseController'
             }).when('/search', {
                 templateUrl: 'view/search.html',
                 controller: 'SearchController'
