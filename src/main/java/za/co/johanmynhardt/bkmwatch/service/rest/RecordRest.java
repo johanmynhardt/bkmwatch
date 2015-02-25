@@ -1,6 +1,5 @@
 package za.co.johanmynhardt.bkmwatch.service.rest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,7 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import za.co.johanmynhardt.bkmwatch.model.PatrollerAlertRecord;
-import za.co.johanmynhardt.bkmwatch.service.AlertDb;
+import za.co.johanmynhardt.bkmwatch.service.repository.AlertDb;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,7 +24,8 @@ import java.util.List;
 public class RecordRest {
 
     private static final Logger LOG = LoggerFactory.getLogger(RecordRest.class);
-    @Autowired
+    @Inject
+    @Named("alertDbFileImlp")
     private AlertDb alertDb;
 
     @RequestMapping("ping")

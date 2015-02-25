@@ -1,4 +1,4 @@
-package za.co.johanmynhardt.bkmwatch.service;
+package za.co.johanmynhardt.bkmwatch.service.repository;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import za.co.johanmynhardt.bkmwatch.model.PatrollerAlertRecord;
 import za.co.johanmynhardt.bkmwatch.parser.PatrollerAlertParser;
+import za.co.johanmynhardt.bkmwatch.service.PatrollerAlertPoller;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,11 +30,11 @@ import java.util.stream.Collectors;
  * @author johan
  */
 @Service
-public class AlertDb {
+public class AlertDbFileImpl extends AbstractDb implements AlertDb {
 
     Set<PatrollerAlertRecord> backingSet = Sets.newLinkedHashSet();
 
-    private static final Logger LOG = LoggerFactory.getLogger(AlertDb.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AlertDbFileImpl.class);
     @Value("${resourceFile}")
     private String fileName = "/home/johan/bkmwatch2";
 
@@ -42,14 +44,21 @@ public class AlertDb {
     @Autowired
     private PatrollerAlertPoller poller;
 
-    public List<PatrollerAlertRecord> getAllRecords(int page, int itemsPerPage, boolean update) throws IOException, ClassNotFoundException {
-        int start = page * itemsPerPage;
-        int end = start + itemsPerPage;
-        LOG.debug("Returning from {} to {} (page={}, itemsPerPage={}, update={})", start, end, page, itemsPerPage, update);
+    @Override
+    public List<PatrollerAlertRecord> getAllRecords(int page, int itemsPerPage, boolean update) throws IOException {
 
-        updateBacking(update);
+        try {
+            updateBacking(update);
+        } catch (ClassNotFoundException e) {
+            LOG.error("Error", e);
+        }
 
-        return Lists.newArrayList(backingSet).subList(start, backingSet.size() > end ? end : backingSet.size());
+        return returnPageFromResults(Lists.newArrayList(backingSet), page, itemsPerPage);
+    }
+
+    @Override
+    public PatrollerAlertRecord createRecord(Date date, String message) {
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
     private void updateBacking(boolean update) throws IOException, ClassNotFoundException {
@@ -103,6 +112,7 @@ public class AlertDb {
         }
     }
 
+    @Override
     public List<PatrollerAlertRecord> search(String search) {
         LOG.debug("Searching for key={}", search);
         final List<PatrollerAlertRecord> collect = backingSet.stream()

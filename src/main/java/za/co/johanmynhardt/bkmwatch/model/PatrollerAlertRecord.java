@@ -1,7 +1,5 @@
 package za.co.johanmynhardt.bkmwatch.model;
 
-import za.co.johanmynhardt.bkmwatch.parser.PatrollerAlertParser;
-
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
