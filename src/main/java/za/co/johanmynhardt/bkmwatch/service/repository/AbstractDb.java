@@ -19,6 +19,8 @@ public class AbstractDb {
         int start = page * itemsPerPage;
         int end = start + itemsPerPage;
 
+        LOG.debug("Requesting {} items per page at page {} from {} source items.", itemsPerPage, page, source.size());
+
         if (start > source.size()) {
             return Collections.emptyList();
         }

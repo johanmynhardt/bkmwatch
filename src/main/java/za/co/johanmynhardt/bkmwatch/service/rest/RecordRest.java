@@ -25,7 +25,7 @@ public class RecordRest {
 
     private static final Logger LOG = LoggerFactory.getLogger(RecordRest.class);
     @Inject
-    @Named("alertDbFileImlp")
+    @Named("alertDbDerbyImpl")
     private AlertDb alertDb;
 
     @RequestMapping("ping")

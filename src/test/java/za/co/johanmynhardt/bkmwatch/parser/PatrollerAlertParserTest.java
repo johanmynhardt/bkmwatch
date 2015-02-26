@@ -2,7 +2,6 @@ package za.co.johanmynhardt.bkmwatch.parser;
 
 import com.google.common.collect.Sets;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -92,10 +91,10 @@ public class PatrollerAlertParserTest {
         }
     }
 
-    @Autowired
+    @Inject
     private PatrollerAlertPoller poller;
 
-    @Autowired
+    @Inject
     private PatrollerAlertParser parser;
 
     @Inject
@@ -186,12 +185,14 @@ public class PatrollerAlertParserTest {
     public void AlertDb() throws IOException, ClassNotFoundException {
         final List<PatrollerAlertRecord> allDbRecords = alertDb.getAllRecords(0, 10, false);
 
+        System.out.println("allDbRecords = " + allDbRecords);
+
         /*long count = alertDb.count();
 
         System.out.println("count = " + count);*/
     }
 
-    @Test
+    //@Test
     public void importLocal() throws IOException {
         int page = 0;
 
@@ -205,5 +206,10 @@ public class PatrollerAlertParserTest {
             }
         }
 
+    }
+
+    @Test
+    public void PopulateDb() {
+        ((AlertDbDerbyImpl) alertDb).populateDatabase();
     }
 }

@@ -3,7 +3,6 @@ package za.co.johanmynhardt.bkmwatch.service.repository;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import za.co.johanmynhardt.bkmwatch.model.PatrollerAlertRecord;
 import za.co.johanmynhardt.bkmwatch.parser.PatrollerAlertParser;
 import za.co.johanmynhardt.bkmwatch.service.PatrollerAlertPoller;
+
+import javax.inject.Inject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,7 +42,7 @@ public class AlertDbFileImpl extends AbstractDb implements AlertDb {
     @Value("${baseUrl}")
     String baseUrl;
 
-    @Autowired
+    @Inject
     private PatrollerAlertPoller poller;
 
     @Override
