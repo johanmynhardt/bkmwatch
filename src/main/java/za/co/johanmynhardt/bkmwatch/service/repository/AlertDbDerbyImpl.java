@@ -65,6 +65,10 @@ public class AlertDbDerbyImpl extends AbstractDb implements AlertDb {
 
         LOG.trace("Retrieving ALL records from DB.");
 
+        if (update) {
+            populateDatabase();
+        }
+
         final List<PatrollerAlertRecord> records = this.getAllRecords();
 
         return returnPageFromResults(records, page, itemsPerPage);
@@ -107,6 +111,7 @@ public class AlertDbDerbyImpl extends AbstractDb implements AlertDb {
 
                 if (getAllRecords().containsAll(pageResult.getRecords())) {
                     LOG.debug("No new records found.");
+                    return;
                 } else {
                     final Sets.SetView<PatrollerAlertRecord> difference = Sets.difference(pageResult.getRecords(), Sets.newTreeSet(getAllRecords()));
                     if (difference.size() > 5) {
