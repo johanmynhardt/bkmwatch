@@ -11,6 +11,7 @@ import java.util.Date;
 public class PatrollerAlertRecord implements Serializable,  Comparable<PatrollerAlertRecord> {
 
     private static final long serialVersionUID = -3023663488377075259L;
+    private String recordHash;
     private Date date;
     private String message;
 
@@ -61,6 +62,14 @@ public class PatrollerAlertRecord implements Serializable,  Comparable<Patroller
         return new PatrollerAlertRecord(date, recordFields[1]);
     }
 
+    public String getRecordHash() {
+        return recordHash;
+    }
+
+    public void setRecordHash(String recordHash) {
+        this.recordHash = recordHash;
+    }
+
     public Date getDate() {
         return date;
     }
@@ -81,6 +90,7 @@ public class PatrollerAlertRecord implements Serializable,  Comparable<Patroller
     public String toString() {
         return "PatrollerAlertRecord{" +
                 "date=" + date +
+                ", recordHash='" + recordHash + '\'' +
                 ", message='" + message + '\'' +
                 '}';
     }
@@ -94,17 +104,12 @@ public class PatrollerAlertRecord implements Serializable,  Comparable<Patroller
 
         PatrollerAlertRecord that = (PatrollerAlertRecord) o;
 
-        if (date != null ? !date.equals(that.date) : that.date != null)
-            return false;
-        if (message != null ? !message.equals(that.message) : that.message != null)
-            return false;
-
-        return true;
+        return Integer.valueOf(hashCode()).equals(Integer.valueOf(that.hashCode()));
     }
 
     @Override
     public int hashCode() {
-        int result = date != null ? date.hashCode() : 0;
+        int result = date != null ? Long.valueOf(date.getTime()).hashCode() : 0;
         result = 31 * result + (message != null ? message.hashCode() : 0);
         return result;
     }

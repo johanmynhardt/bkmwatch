@@ -62,8 +62,8 @@ public class Config extends WebMvcConfigurerAdapter {
         return dataSource;
     }*/
 
-    @Bean
-    public JdbcTemplate getJdbcTemplate(@Value("${dbUrl}") String dbUrl) {
+    @Bean(destroyMethod = "shutdown")
+    public DataSource getDataSource(@Value("${dbUrl}") String dbUrl) {
 
         try {
             Class.forName("org.apache.derby.jdbc.EmbeddedConnectionPoolDataSource");
@@ -76,8 +76,11 @@ public class Config extends WebMvcConfigurerAdapter {
         config.setJdbcUrl(dbUrl);
         config.setDriverClassName("org.apache.derby.jdbc.EmbeddedConnectionPoolDataSource");
 
-        DataSource dataSource = new HikariDataSource(config);
+        return new HikariDataSource(config);
+    }
 
+    @Bean
+    public JdbcTemplate getJdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 

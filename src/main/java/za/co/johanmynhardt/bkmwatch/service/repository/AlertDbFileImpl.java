@@ -123,4 +123,9 @@ public class AlertDbFileImpl extends AbstractDb implements AlertDb {
         LOG.debug("found {} results for {}", collect.size(), search);
         return collect.size() < 100 ? collect : collect.subList(0, 100);
     }
+
+    @Override
+    public boolean contains(PatrollerAlertRecord record) {
+        return false;
+    }
 }

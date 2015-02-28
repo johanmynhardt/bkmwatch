@@ -1,7 +1,5 @@
 package za.co.johanmynhardt.bkmwatch.service.repository;
 
-import com.google.common.collect.Sets;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -74,28 +72,34 @@ public class AlertDbDerbyImpl extends AbstractDb implements AlertDb {
         return returnPageFromResults(records, page, itemsPerPage);
     }
 
-    List<PatrollerAlertRecord> getAllRecords() {
+    public List<PatrollerAlertRecord> getAllRecords() {
 
-        return template.queryForList("SELECT DATE, MESSAGE FROM ALERT_RECORD")
-                    .stream()
-                    .map((row) -> new PatrollerAlertRecord((Date) row.get("DATE"), (String) row.get("MESSAGE")))
-                    .collect(Collectors.toList());
+        return template.queryForList("SELECT DATE, MESSAGE FROM ALERT_RECORD ORDER BY DATE DESC")
+                .stream()
+                .map((row) -> new PatrollerAlertRecord((Date) row.get("DATE"), (String) row.get("MESSAGE")))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<PatrollerAlertRecord> search(String search) {
         LOG.debug("Searching for {}", search);
-        return template.queryForList("SELECT DATE, MESSAGE FROM ALERT_RECORD WHERE MESSAGE like ?", String.format("%%%s%%", search))
+        return template.queryForList("SELECT DATE, MESSAGE FROM ALERT_RECORD WHERE MESSAGE LIKE ?", String.format("%%%s%%", search))
                 .stream()
-                .map((row) -> new PatrollerAlertRecord((Date) row.get("DATE"), (String)row.get("MESSAGE")))
+                .map((row) -> new PatrollerAlertRecord((Date) row.get("DATE"), (String) row.get("MESSAGE")))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean contains(PatrollerAlertRecord record) {
+
+        return !template.query("SELECT count(*) AS count FROM ALERT_RECORD WHERE date = ? AND MESSAGE = ?", new Object[] { record.getDate(), record.getMessage() }, (rs, rowNum) -> {
+            return rs.getInt("count");
+        }).isEmpty();
     }
 
     public long count() {
         return template.queryForObject("SELECT COUNT(*) FROM ALERT_RECORD", Long.class);
     }
-
-
 
     public void populateDatabase() {
         int page = -1;
@@ -105,25 +109,22 @@ public class AlertDbDerbyImpl extends AbstractDb implements AlertDb {
 
             try {
                 PatrollerAlertParser.AlertPageResult pageResult = poller.pollUrl(baseUrl + ("?pagenum=" + ++page));
-                //max = pageResult.links.stream().filter((link)->{link.text.contains("last")}).map((link)->link.)
 
                 LOG.debug("page results = " + pageResult.getRecords().size());
 
-                if (getAllRecords().containsAll(pageResult.getRecords())) {
-                    LOG.debug("No new records found.");
-                    return;
-                } else {
-                    final Sets.SetView<PatrollerAlertRecord> difference = Sets.difference(pageResult.getRecords(), Sets.newTreeSet(getAllRecords()));
-                    if (difference.size() > 5) {
-                        LOG.info("New records: {}", difference.size());
-                    } else {
-                        LOG.info("New records: {}", difference);
-                    }
+                int count = 0;
 
-                    for (PatrollerAlertRecord record : pageResult.getRecords()) {
+                for (PatrollerAlertRecord record : pageResult.getRecords()) {
+                    if (!contains(record)) {
                         createRecord(record);
+                        count++;
                     }
                 }
+
+                if (count <= 0) {
+                    return;
+                }
+
             } catch (IOException e) {
                 LOG.error("Error", e);
             }

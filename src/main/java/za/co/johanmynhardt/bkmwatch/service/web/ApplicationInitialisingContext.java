@@ -5,11 +5,13 @@ import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PreDestroy;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
+import javax.sql.DataSource;
 
 import java.util.Timer;
 
@@ -28,6 +30,8 @@ public class ApplicationInitialisingContext implements WebApplicationInitializer
         ctx.register(Config.class);
         ctx.setServletContext(servletContext);
 
+        ctx.refresh();
+
         final ServletRegistration.Dynamic dispatcher = servletContext.addServlet("dispatcher", new DispatcherServlet(ctx));
 
         dispatcher.addMapping("/");
@@ -41,6 +45,7 @@ public class ApplicationInitialisingContext implements WebApplicationInitializer
     @PreDestroy
     public void cleanup() {
         LOG.info("Shutting down");
+
         timer.cancel();
         timer.purge();
         timer = null;

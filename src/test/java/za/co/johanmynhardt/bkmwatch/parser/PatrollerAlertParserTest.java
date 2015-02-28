@@ -36,6 +36,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -98,8 +99,8 @@ public class PatrollerAlertParserTest {
     private PatrollerAlertParser parser;
 
     @Inject
-    @Named("alertDbDerbyImpl")
-    private AlertDb alertDb;
+    //@Named("alertDbDerbyImpl")
+    private AlertDbDerbyImpl alertDb;
 
     @Inject
     @Named("alertDbFileImpl")
@@ -183,9 +184,13 @@ public class PatrollerAlertParserTest {
 
     @Test
     public void AlertDb() throws IOException, ClassNotFoundException {
-        final List<PatrollerAlertRecord> allDbRecords = alertDb.getAllRecords(0, 10, false);
+        final List<PatrollerAlertRecord> allDbRecords = alertDb.getAllRecords();
 
-        System.out.println("allDbRecords = " + allDbRecords);
+        System.out.println("allDbRecords = " + allDbRecords.size());
+
+        Set<PatrollerAlertRecord> set = new HashSet<>(allDbRecords);
+
+        System.out.println("set = " + set.size());
 
         /*long count = alertDb.count();
 
