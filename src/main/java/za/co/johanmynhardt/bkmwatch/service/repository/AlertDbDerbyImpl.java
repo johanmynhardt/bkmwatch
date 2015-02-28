@@ -92,9 +92,9 @@ public class AlertDbDerbyImpl extends AbstractDb implements AlertDb {
     @Override
     public boolean contains(PatrollerAlertRecord record) {
 
-        return !template.query("SELECT count(*) AS count FROM ALERT_RECORD WHERE date = ? AND MESSAGE = ?", new Object[] { record.getDate(), record.getMessage() }, (rs, rowNum) -> {
-            return rs.getInt("count");
-        }).isEmpty();
+        return template.query("SELECT count(*) AS COUNT FROM ALERT_RECORD WHERE date = ? AND MESSAGE = ?", new Object[] { record.getDate(), record.getMessage() }, (rs, rowNum) -> {
+            return rs.getInt("COUNT");
+        }).get(0) > 0;
     }
 
     public long count() {
