@@ -102,7 +102,7 @@ public class AlertDbDerbyImpl extends AbstractDb implements AlertDb {
     }
 
     public void populateDatabase() {
-        int page = -1;
+        int page = 0;
         int max = 622;
 
         do {
