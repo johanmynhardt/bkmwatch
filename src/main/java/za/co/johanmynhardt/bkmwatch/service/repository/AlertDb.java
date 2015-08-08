@@ -15,6 +15,8 @@ public interface AlertDb {
 
     List<PatrollerAlertRecord> getAllRecords(int page, int itemsPerPage, boolean update) throws IOException;
 
+    PatrollerAlertRecord getRecord(int id);
+
     List<PatrollerAlertRecord> search(String search);
 
     boolean contains(PatrollerAlertRecord record);

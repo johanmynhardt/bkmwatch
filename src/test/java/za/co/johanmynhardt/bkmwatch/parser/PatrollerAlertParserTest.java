@@ -1,5 +1,7 @@
 package za.co.johanmynhardt.bkmwatch.parser;
 
+import static org.junit.Assert.*;
+
 import com.google.common.collect.Sets;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +38,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -211,6 +214,27 @@ public class PatrollerAlertParserTest {
             }
         }
 
+    }
+
+    @Test
+    public void Insert2IdenticalRecords() {
+        Date date = new Date();
+
+        String message = "This is a message";
+
+        final PatrollerAlertRecord record = alertDb.createRecord(date, message);
+
+        LOG.debug("record created = {}", record);
+
+        PatrollerAlertRecord patrollerAlertRecord = new PatrollerAlertRecord(date, message);
+
+        final boolean contains = alertDb.contains(patrollerAlertRecord);
+
+        assertEquals(true, contains);
+
+        boolean contains2 = alertDb.contains(new PatrollerAlertRecord(date, "aoeu"));
+
+        assertEquals(false, contains2);
     }
 
     @Test

@@ -58,6 +58,11 @@ public class AlertDbFileImpl extends AbstractDb implements AlertDb {
     }
 
     @Override
+    public PatrollerAlertRecord getRecord(int id) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public PatrollerAlertRecord createRecord(Date date, String message) {
         throw new UnsupportedOperationException("Not Implemented");
     }

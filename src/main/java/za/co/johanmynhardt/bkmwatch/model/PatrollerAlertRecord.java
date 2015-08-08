@@ -11,6 +11,9 @@ import java.util.Date;
 public class PatrollerAlertRecord implements Serializable,  Comparable<PatrollerAlertRecord> {
 
     private static final long serialVersionUID = -3023663488377075259L;
+
+    private Integer id;
+
     private String recordHash;
     private Date date;
     private String message;
@@ -21,6 +24,14 @@ public class PatrollerAlertRecord implements Serializable,  Comparable<Patroller
     public PatrollerAlertRecord(Date date, String message) {
         this.date = date;
         this.message = message;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     @Override

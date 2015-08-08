@@ -8,6 +8,9 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -28,6 +31,7 @@ import java.sql.SQLException;
  */
 @Configuration
 @EnableWebMvc
+@EnableTransactionManagement
 @ComponentScan("za.co.johanmynhardt.bkmwatch")
 public class Config extends WebMvcConfigurerAdapter {
 
@@ -82,6 +86,11 @@ public class Config extends WebMvcConfigurerAdapter {
     @Bean
     public JdbcTemplate getJdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager(DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
     }
 
 }
