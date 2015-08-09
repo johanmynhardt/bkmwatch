@@ -12,6 +12,10 @@
         <jetty.port>8080</jetty.port>
     </properties>
 
+    <scm>
+       <developerConnection>scm:git:git@github.com/johanmynhardt/bkmwatch.git</developerConnection>
+    </scm>
+
     <dependencies>
 
         <dependency>
