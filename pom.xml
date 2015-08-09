@@ -13,7 +13,7 @@
     </properties>
 
     <scm>
-       <developerConnection>scm:git:git@github.com/johanmynhardt/bkmwatch.git</developerConnection>
+       <developerConnection>scm:git:ssh://git@github.com/johanmynhardt/bkmwatch.git</developerConnection>
     </scm>
 
     <dependencies>
