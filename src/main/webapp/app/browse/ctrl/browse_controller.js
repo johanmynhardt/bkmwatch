@@ -1,7 +1,7 @@
 app.controller('BrowseController', function ($scope, $log, $route, $routeParams, $location, dbService) {
 
-    $log.debug("routeParams=" + JSON.stringify($routeParams));
-    $log.debug("location=" + JSON.stringify($location));
+    $log.debug("routeParams=%s", $routeParams);
+    $log.debug("location=%s", $location);
 
     $scope.items = dbService.query({page: $routeParams.page, itemsPerPage: $routeParams.itemsPerPage});
 
