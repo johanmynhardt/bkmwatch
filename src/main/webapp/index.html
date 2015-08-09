@@ -11,83 +11,13 @@
     <script src="bower_components/angular-route/angular-route.js"></script>
     <script src="bower_components/foundation/js/foundation.js"></script>
 
-    <script type="application/javascript">
+    <script src="app/app.js"></script>
+    <script src="app/config.js"></script>
+    <script src="app/shared/services/services.js"></script>
+    <script src="app/browse/ctrl/browse_controller.js"></script>
+    <script src="app/search/ctrl/search_controller.js"></script>
+    <script src="app/shared/ctrl/breadcrumb_controller.js"></script>
 
-        var app = angular.module('app', ['ngResource', 'ngRoute']);
-        var dbService = app.factory('dbService', function ($resource) {
-            return $resource('record/alerts', {}, {'query': {method: 'GET', isArray: true}});
-        });
-
-        var dbSearch = app.factory('dbSearch', function ($resource) {
-            return $resource('record/search', {}, {'query': {method: 'GET', isArray: true}});
-        });
-
-        var dbUpdate = app.factory('dbUpdate', function($resource){
-            return $resource('record/alerts', {}, {update:true});
-        });
-
-        app.controller('BreadcrumbController', function($scope, dbUpdate) {
-            $scope.updateAlerts = function() {
-                dbUpdate.query({update:true});
-            }
-        });
-
-        app.controller('BrowseController', function ($scope, $log, $route, $routeParams, $location, dbService) {
-
-            $log.debug("routeParams=" + JSON.stringify($routeParams));
-            $log.debug("location=" + JSON.stringify($location));
-
-            $scope.items = dbService.query({page: $routeParams.page, itemsPerPage: $routeParams.itemsPerPage});
-
-            $scope.next = function () {
-                $log.debug("next...");
-                var next = parseInt($routeParams.page != undefined ? $routeParams.page : 0) + 1;
-                $location.path('/browse/' + next).search({itemsPerPage: $routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
-            };
-
-            $scope.previous = function () {
-                $log.debug("previous...");
-                var prev = parseInt($routeParams.page != undefined ? $routeParams.page : 1) - 1;
-                $location.path('/browse/' + prev).search({itemsPerPage: $routeParams.itemsPerPage != undefined ? $routeParams.itemsPerPage : 10});
-            };
-
-            $scope.showPrevious = function() {
-                return $routeParams.page > 0;
-            };
-
-        });
-
-        app.controller('SearchController', function ($scope, $log, dbSearch) {
-            $scope.search = "";
-
-            $scope.items = [];
-
-            $scope.doSearch = function () {
-                $log.debug("search for " + $scope.search);
-
-                $scope.items = dbSearch.query({search: $scope.search});
-            }
-        });
-
-        app.config(function ($routeProvider, $locationProvider) {
-            $routeProvider.when('/', {
-                templateUrl: 'view/home.html',
-                controller: 'BrowseController'
-            }).when('/browse', {
-                templateUrl: 'view/browse.html',
-                controller: 'BrowseController'
-            }).when('/browse/:page', {
-                templateUrl: 'view/browse.html',
-                controller: 'BrowseController'
-            }).when('/browse/:page/:itemsPerPage', {
-                templateUrl: 'view/browse.html',
-                controller: 'BrowseController'
-            }).when('/search', {
-                templateUrl: 'view/search.html',
-                controller: 'SearchController'
-            });
-        });
-    </script>
 </head>
 <body>
 
