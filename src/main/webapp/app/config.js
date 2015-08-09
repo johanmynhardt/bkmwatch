@@ -1,4 +1,4 @@
-app.config(function ($routeProvider, $locationProvider) {
+app.config(function ($routeProvider) {
     $routeProvider.when('/', {
         templateUrl: 'app/home/view/home.html',
         controller: 'BrowseController'
