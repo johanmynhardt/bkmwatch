@@ -2,14 +2,34 @@
 
 <div class="panel">
 
-    <p>Search by Keyword</p>
 
-    <div>
-        <input type="text" ng-model="search" name="search"/>
-        <button ng-click="doSearch();">Search</button>
+    <div class="row collapse">
+        <div class="large-2 columns">
+            <span class="prefix">Search by Keyword</span>
+        </div>
+        <div class="large-8 columns">
+            <input type="text" ng-model="search" name="search" placeholder="eg.: SAPS IR or Bergvliet (search is case-sensitive)"/>
+        </div>
+        <div class="large-2 columns">
+            <button ng-click="doSearch();" class="button postfix" ng-disabled="search.length == 0">Search</button>
+        </div>
     </div>
 
-    <table class="table-view" width="100%">
+    <div ng-show="searchState.searching">
+        <img ng-src="assets/img/infinity-loading.gif"/>
+    </div>
+
+    <div class="round callout panel" ng-hide="items.length > 0 || !searchState.searched">
+        <h4>No Results</h4>
+        <hr/>
+        <p ng-if="searchState.searched && search.length > 0">The search for <code>{{search}}</code> returned 0 results.</p>
+    </div>
+
+    <div ng-show="items.length > 0">
+        Showing {{items.length}} results.
+    </div>
+
+    <table class="table-view" width="100%" ng-show="items.length > 0">
         <thead>
         <tr>
             <td width="200">Date</td>
