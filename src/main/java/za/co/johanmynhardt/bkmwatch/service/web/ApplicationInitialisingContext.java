@@ -22,7 +22,7 @@ import java.util.Timer;
 public class ApplicationInitialisingContext implements WebApplicationInitializer {
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(ApplicationInitialisingContext.class);
-    Timer timer = new Timer("Eskom-Poll", false);
+    //Timer timer = new Timer("Eskom-Poll", false);
 
     @Override
     public void onStartup(javax.servlet.ServletContext servletContext) throws ServletException {
@@ -46,9 +46,9 @@ public class ApplicationInitialisingContext implements WebApplicationInitializer
     public void cleanup() {
         LOG.info("Shutting down");
 
-        timer.cancel();
+        /*timer.cancel();
         timer.purge();
-        timer = null;
+        timer = null;*/
     }
 
 }
