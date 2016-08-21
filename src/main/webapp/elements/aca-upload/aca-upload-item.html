@@ -1,0 +1,93 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-upload-item">
+  <template>
+
+    <style>
+      #item-container {
+        margin-bottom: 0.5em;
+        width: 400px;
+      }
+
+      #uploadProgress {
+        width: inherit;
+      }
+
+      paper-button.default {
+        color: white;
+        background-color: #0064ad;
+      }
+
+      paper-tooltip hr {
+        border-top: 1px;
+      }
+
+      div.overflow {
+        white-space: nowrap;
+        max-height: 1.2em;
+        max-width: 230px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    </style>
+
+    <paper-card id="item-container" class="">
+      <div class="card-content" title="[[file.name]]">
+
+        <div class="layout horizontal">
+          <div class="flex">
+              <div>Size: [[file.size]] bytes</div>
+              <div>MIME: [[file.type]]</div>
+
+            <p></p>
+
+            <div hidden="[[uploaded]]">Uploading: [[progress]]%</div>
+
+            <div hidden$="[[!uploaded]]">
+              <div>
+                <iron-icon icon="done"></iron-icon> Complete
+              </div>
+              <div title="[[filePath]]" class="overflow">Temp path: [[filePath]] </div>
+            </div>
+
+          </div>
+          <iron-image id="img" src$="[[thumbData]]" style="width:150px; height:150px;" sizing="contain"></iron-image>
+        </div>
+
+        <paper-progress id="uploadProgress" class=" horizontal flex" value="[[progress]]" hidden$="[[uploaded]]"></paper-progress>
+      </div>
+
+      <div class="card-actions">
+        <paper-icon-button id="caption" icon="communication:chat-bubble" on-click="showCaptionDialog">
+        </paper-icon-button>
+        <paper-tooltip for="caption">
+          <strong>Caption</strong>
+          <div hidden$="[[!file.caption]]">
+            <hr>
+            <em>[[file.caption]]</em>
+          </div>
+        </paper-tooltip>
+
+        <paper-icon-button id="launchExternal" hidden$="[[!publicLocation]]" icon="launch" on-click="launchExternal"></paper-icon-button>
+        <paper-tooltip for="launchExternal">View media in a new tab/window.</paper-tooltip>
+      </div>
+    </paper-card>
+
+    <paper-dialog id="captionDialog">
+      <h2>Caption</h2>
+
+      <paper-input value="{{newCaption}}" label="Caption">
+        <paper-icon-button id="clearIcon" icon="clear" noink="" suffix="" hidden$="[[!file.caption]]" on-click="clearCaption"></paper-icon-button>
+      </paper-input>
+      <paper-tooltip for="clearIcon" position="top">Clear caption</paper-tooltip>
+
+      <div class="buttons">
+        <paper-button dialog-dismiss="" noink="">Cancel</paper-button>
+        <paper-button dialog-confirm="" raised="" class="default">Update</paper-button>
+      </div>
+    </paper-dialog>
+
+  </template>
+
+  </dom-module>
+<script src="aca-upload-item.js"></script></body></html>

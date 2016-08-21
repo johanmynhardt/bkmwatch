@@ -1,0 +1,31 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-autocomplete-overlay">
+
+  <style>
+    .title {
+      margin-top: 0.2em;
+      padding: 0.5em;
+      font-weight: bold;
+    }
+
+    #listbox {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+  </style>
+
+  <template>
+
+    <paper-material elevation="5">
+      <paper-listbox id="listbox">
+        <template is="dom-repeat" items="[[items]]">
+          <paper-item title$="id=[[item.id]]">[[item.label]]</paper-item>
+        </template>
+      </paper-listbox>
+    </paper-material>
+  </template>
+
+
+  </dom-module>
+<script src="aca-autocomplete-overlay.js"></script></body></html>

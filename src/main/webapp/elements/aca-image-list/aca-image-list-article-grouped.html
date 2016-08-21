@@ -1,0 +1,51 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-image-list-article-grouped">
+
+
+  <style>
+
+    :host {
+      display: block;
+      z-index: 100;
+    }
+
+    paper-material {
+      padding: 1em;
+      margin: 0.5em;
+    }
+
+  </style>
+
+  <template>
+    <style include="shared-styles"></style>
+
+    <div style="display:block;">
+      <span class="flex">
+        <paper-icon-button toggle="" icon="apps" disabled="[[!hasSelection]]" on-click="toggleShowSelection"></paper-icon-button>
+      </span>
+    </div>
+
+
+
+    <template id="articles" is="dom-repeat" items="[[articles]]" as="article">
+
+      <paper-card class="block-with-margin">
+        <div class="card-content">
+          <div class="title">
+            <div class="medium">[[heading(article.metaData)]]</div>
+            <div class="small">Published on [[dateFromLong(article.metaData.publishDate)]] [[byLine(article.metaData.author)]]</div>
+          </div>
+
+          <template id="images" is="dom-repeat" items="[[article.mediaItems]]" as="image">
+            <aca-image-item selected="[[image.selected]]" config="[[config]]" item="[[getMediaItemReferenceAt(image, 0)]]" on-click="toggleItem"></aca-image-item>
+          </template>
+        </div>
+      </paper-card>
+
+    </template>
+
+  </template>
+
+  </dom-module>
+<script src="aca-image-list-article-grouped.js"></script></body></html>

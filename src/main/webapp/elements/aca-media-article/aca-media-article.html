@@ -1,0 +1,102 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-media-article">
+
+  <template>
+
+    <style>
+      .mediaContainer {
+        /*padding: 0.3em;*/
+        /*display: inline-block;*/
+        margin: 0.3em;
+        display: inline-block;
+        max-width: 400px;
+      }
+
+      .image-150 {
+        width: 150px;
+        height: 150px;
+      }
+    </style>
+
+    <h1>
+      Aca media article:[[contentKey]]
+    </h1>
+
+    <h4>
+      Fields:
+    </h4>
+    <ul>
+      <template is="dom-repeat" items="[[fields]]">
+        <li>[[item.key]]: [[item.value]]</li>
+      </template>
+    </ul>
+
+    <div class="">
+      <h4 class="flex">Media</h4>
+      <h6>Items: [[media.length]]</h6>
+    </div>
+
+    <div class="layout horizontal wrap">
+      <template is="dom-repeat" items="[[media]]">
+        <paper-card id="mediaContainer" class="mediaContainer">
+          <div class="card-content">
+            <div class="layout horizontal">
+              <template is="dom-if" if="[[_isImage(item)]]">
+                <iron-image src$="[[item.url]]" class="image-150" sizing="cover" fade=""></iron-image>
+              </template>
+
+              <template is="dom-if" if="[[_isAudio(item)]]">
+                <div class="image-150">
+                  <iron-image src$="[[audioImage()]]">
+                  <audio id="mediaControl">
+                    <source src$="[[item.url]]">
+                    Your browser does not support the audio tag.
+                  </audio>
+                </iron-image></div>
+              </template>
+
+              <template is="dom-if" if="[[_isVideo(item)]]">
+                <div class="image-150">
+                  <video id="mediaControl" width="150" height="84">
+                    <source src$="[[item.url]]">
+                    Your browser does not support the html5 video tag.
+                  </video>
+                </div>
+              </template>
+
+              <div style="width:250px; margin-left: 0.3em;">
+                <div hidden$="[[item.caption]]">
+                  (No Caption)
+                </div>
+                <div hidden$="[[!item.caption]]">
+                  [[item.caption]]
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <template is="dom-if" if="[[_isAudioOrVideo(item)]]">
+              <div class="horizontal layout">
+                <span class="flex"></span>
+                <paper-icon-button id="mediaButton" icon="av:play-circle-outline" on-click="onTogglePlay"></paper-icon-button>
+                <span class="flex"></span>
+              </div>
+            </template>
+          </div>
+        </paper-card>
+      </template>
+
+      <div hidden$="[[_hasMedia]]">
+        <p>
+          <em>No Media</em>
+        </p>
+      </div>
+
+    </div>
+
+  </template>
+
+  </dom-module>
+<script src="aca-media-article.js"></script></body></html>

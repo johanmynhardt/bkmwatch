@@ -1,0 +1,31 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="bkm-search">
+  <template>
+      <iron-ajax id="ajaxSearch" method="get" handle-as="json" content-type="application/json" url$="[[_url]]" last-response="{{alerts}}" on-response="handleResponse" loading="{{loading}}" auto="">
+    
+      </iron-ajax>
+
+      <paper-input label="Enter keyword" type="text" value="{{q}}" placeholder="eg. SAPS, IR or Bergvliet">
+          <paper-icon-button suffix="" icon="search" on-click="doSearch"></paper-icon-button>
+      </paper-input>
+
+      <bkm-alerts-table items="[[items]]" hidden$="[[!hasResults]]">
+          
+          <h4>Showing [[resultCount]] results for [[currentQ]]</h4>
+          
+          <div class="horizontal layout flex middle">
+              <span class="flex"></span>
+              <paper-icon-button icon="chevron-left" on-click="previousPage" hidden$="[[_firstPage]]">
+              </paper-icon-button>
+              <paper-button noink="">[[pageDisplay]]/[[pages]]</paper-button>
+              <paper-icon-button icon="chevron-right" on-click="nextPage" hidden$="[[_lastPage]]">     
+              </paper-icon-button>
+          </div>
+      </bkm-alerts-table>
+
+      <h4 hidden$="[[hasResults]]">No Results</h4>
+  </template>
+
+  </dom-module>
+<script src="bkm-search.js"></script></body></html>

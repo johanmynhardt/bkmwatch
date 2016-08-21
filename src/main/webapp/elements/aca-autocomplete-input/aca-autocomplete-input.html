@@ -1,0 +1,39 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-autocomplete-item.html">
+<link rel="import" href="aca-autocomplete-dropdown.html">
+
+</head><body><dom-module id="aca-autocomplete-input">
+
+  <style>
+
+    #container>div, #container>paper-input {
+      display: inline-block;
+    }
+
+    aca-autocomplete-item, .aca-autocomplete-item {
+      display: inline-block;
+    }
+
+  </style>
+
+  <template>
+
+    <iron-signals on-iron-signal-remove-autocomplete-item="removeAutocompleteItem" on-iron-signal-add-autocomplete-item="addAutocompleteItem">
+    </iron-signals>
+
+    <div id="container">
+      <div class="itemContainer">
+        [[title]]
+        <template is="dom-repeat" items="[[selected]]">
+          <aca-autocomplete-item item="[[item]]" for="[[for]]"></aca-autocomplete-item>
+        </template>
+      </div>
+      <paper-input label="[[label]]" value="{{value}}"></paper-input>
+
+    </div>
+    <aca-autocomplete-dropdown id="acdropdown" for="[[for]]" title="[[label]]"></aca-autocomplete-dropdown>
+
+  </template>
+
+  </dom-module>
+<script src="aca-autocomplete-input.js"></script></body></html>

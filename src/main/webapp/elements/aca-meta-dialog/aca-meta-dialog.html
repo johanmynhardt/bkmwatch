@@ -1,0 +1,144 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-meta-dialog-meta-content.html">
+<link rel="import" href="aca-meta-dialog-overview-data.html">
+<link rel="import" href="aca-meta-dialog-usage.html">
+
+</head><body><dom-module id="aca-meta-dialog">
+  <style>
+    :root {
+      --paper-tabs-selection-bar-color: #666;
+        --paper-tab-ink: #333;
+        --paper-tabs: {
+          color: #666;
+        }
+      }
+
+    .paper-dialog-0 > *:first-child {
+      margin-top: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+      paper-dialog {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin: 0;
+      }
+
+      #dialogContent {
+        border: 1px solid green;
+        bottom: 0;
+        height: 100%;
+        top: 0;
+        margin: 0;
+      }
+
+    #imageWrap {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    #imageWrap.landscape {
+      margin-top: auto;
+      margin-bottom: auto;
+    }
+
+    #imageWrap.portrait {
+      overflow-y: auto;
+    }
+
+    paper-dialog-scrollable {
+      /*debugging:*/
+      /*border: 1px solid black;*/
+    }
+
+    aca-meta-dialog-meta-content {
+      width: 100%;
+      overflow: scroll;
+    }
+
+    #imageSpan {
+      text-align: center;
+      margin-top: auto;
+      margin-bottom: auto;
+    }
+
+  </style>
+
+  <template>
+
+    <style include="shared-styles"></style>
+
+    <iron-a11y-keys target="[[target]]" keys="left pageup" on-keys-pressed="_previousTab"></iron-a11y-keys>
+    <iron-a11y-keys target="[[target]]" keys="right pagedown" on-keys-pressed="_nextTab"></iron-a11y-keys>
+    <iron-a11y-keys target="[[target]]" keys="esc" on-keys-pressed="_closeDialog"></iron-a11y-keys>
+
+    <paper-dialog id="detailsDialog" modal="" class="layout vertical flex">
+      <!-- HEADING + Close -->
+      <paper-toolbar>
+        <iron-icon icon="image:camera"></iron-icon>
+        <paper-icon-button icon="arrow-back" dialog-dismiss=""></paper-icon-button>
+        <span class="title">[[heading]]</span>
+        <aca-copy-to-clipboard data-text="[[_imageUrl(item)]]"></aca-copy-to-clipboard>
+        <aca-file-download-link target-location="[[_irsDownload(item)]]"></aca-file-download-link>
+      </paper-toolbar>
+
+      <div class="flex layout vertical">
+
+        <paper-tabs id="plainTabs" selected="{{selectedTab}}">
+          <paper-tab>IMAGE</paper-tab>
+          <!--         <paper-tab>JSON</paper-tab> -->
+          <paper-tab>USAGE</paper-tab>
+          <paper-tab>METADATA</paper-tab>
+        </paper-tabs>
+
+        <paper-material elevation="0" class="flex horizontal layout">
+          <iron-pages id="pages" selected="[[selectedTab]]" class="layout horizontal flex" style="padding-top: 0.3em;">
+            <!-- IMAGE -->
+            <div id="imageContainer" class="layout horizontal flex">
+
+              <!--<paper-dialog-scrollable class="flex layout vertical" id="imageWrap" style$="[[_imgStylePostImageLoad]]">-->
+                  <!--<iron-image id="iImage" style$="[[imageStyleString]]" src$="[[_imageUrlForIron(item)]]" sizing="cover" preload fade></iron-image>-->
+              <!--</paper-dialog-scrollable>-->
+              <span class="flex" id="imageSpan">
+                <iron-image id="iImage" style$="[[imageStyleString]]" src$="[[_imageUrlForIron(item)]]" sizing="cover" preload="" fade=""></iron-image>
+              </span>
+
+              <paper-material class="layout vertical flex">
+
+                <paper-card elevation="1">
+                  <div class="card-content">
+                    <aca-meta-dialog-overview-data portrait="{{portrait}}" item="[[item]]" class="flex"></aca-meta-dialog-overview-data>
+                  </div>
+                </paper-card>
+              </paper-material>
+
+            </div>
+
+            <!-- JSON -->
+            <!--           <paper-dialog-scrollable> -->
+            <!--             <pre id="dialogContent">[[_stringify(item)]]</pre> -->
+            <!--           </paper-dialog-scrollable> -->
+
+            <!-- USAGE -->
+            <aca-meta-dialog-usage item="[[item]]"></aca-meta-dialog-usage>
+
+
+            <!-- METADATA -->
+            <aca-meta-dialog-meta-content source="[[_imageUrl(item)]]"></aca-meta-dialog-meta-content>
+          </iron-pages>
+        </paper-material>
+
+      </div>
+
+    </paper-dialog>
+
+  </template>
+
+  </dom-module>
+<script src="aca-meta-dialog.js"></script></body></html>

@@ -1,0 +1,23 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-video-dialog.html">
+<link rel="import" href="aca-video-item.html">
+
+</head><body><dom-module id="aca-video-list">
+  <template>
+
+    <style></style>
+
+    <iron-signals on-iron-signal-toggle-image="toggleItem" on-iron-signal-show-video-details="_showVideoDetails" on-iron-signal-search-loading-changed="searchLoadingChanged">
+    </iron-signals>
+
+    <div class="horizontal">
+      <template id="articleImages" is="dom-repeat" items="[[_videos]]" as="video">
+        <!--<aca-video-item model-item="[[video]]" selected="[[video.selected]]" item="[[getMediaItemReferenceAt(video, 0)]]"></aca-video-item>-->
+        <aca-video-item video="[[video]]"></aca-video-item>
+      </template>
+    </div>
+
+    <aca-video-dialog id="videoDialog"></aca-video-dialog>
+  </template>
+
+  </dom-module><script src="aca-video-list.js"></script></body></html>

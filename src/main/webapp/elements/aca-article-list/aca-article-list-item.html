@@ -1,0 +1,79 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-article-dialog.html">
+
+</head><body><dom-module id="aca-article-list-item">
+
+  <style>
+    .img-padding {
+      margin: 0 0.5em 0.5em 0;
+      float: left;
+    }
+
+    .article-content {
+      width: 20em;
+      text-align: justify;
+      overflow: hidden;
+    }
+
+    .by-line {
+      line-height: 2;
+    }
+
+    .heading {
+      margin-bottom: 0.2em;
+    }
+
+    paper-card {
+      width: 300px;
+      margin-bottom: 0.3em;
+      margin-right: 0.3em;
+    }
+
+    .card-content {
+      height: 260px;
+      overflow: auto;
+      cursor: pointer;
+    }
+
+    .card-actions {
+      font-size: 12px;
+      font-weight: bold;
+      color: gray;
+    }
+
+  </style>
+
+  <template>
+    <paper-card>
+      <div class="card-content" on-click="_displayArticle">
+        <h4 class="heading">[[_headline(item.article)]]</h4>
+        <div class="layout horizontal center by-line">
+          By [[_author(item.article)]]
+        </div>
+        <div class="layout horizontal">
+          <div class="article-content">
+            <div style$="[[itemThumbStyle]]" class="img-padding" hidden$="[[!hasImage]]">
+              <iron-image style$="[[itemThumbStyle]]" src$="[[itemThumbUrl]]" sizing="cover" preload="" fade=""></iron-image>
+            </div>
+            <div>[[_truncate(item.article.articleHTML)]]</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-actions layout horizontal flex center">
+        <div>
+            [[_title(item)]] - [[_date(item.article.publishDate)]]
+        </div>
+        <span class="flex"></span>
+        <div hidden$="[[!_canSelectForClone()]]">
+          <paper-icon-button id="selectToggle" icon="check-box" hidden$="[[!item.selected]]" on-click="_toggleItem"></paper-icon-button>
+          <paper-icon-button id="selectToggle" icon="check-box-outline-blank" hidden$="[[item.selected]]" on-click="_toggleItem"></paper-icon-button>
+        </div>
+      </div>
+    </paper-card>
+
+    <aca-article-dialog id="articleDialog"></aca-article-dialog>
+
+  </template>
+
+  </dom-module>
+<script src="aca-article-list-item.js"></script></body></html>

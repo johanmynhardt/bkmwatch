@@ -1,0 +1,110 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-upload-item.html">
+
+</head><body><dom-module id="aca-upload">
+  <template>
+
+    <style>
+
+      #postButton.enabled {
+        color: white;
+        background-color: #0064ad;
+      }
+
+      .toast-hide-button {
+        color: yellow;
+        border: 1px solid white;
+        border-radius: 5px;
+      }
+
+      .inline {
+        display: inline-block;
+      }
+    </style>
+
+    <iron-signals on-iron-signal-upload-complete="uploadCompleted"></iron-signals>
+
+    <iron-pages selected="{{step}}">
+
+      <section>
+        <h3>Add Headline</h3>
+        <div>
+          <p><em>Fill out the following fields to continue:</em></p>
+          <paper-input class="flex" label="Headline" value="{{headline}}">
+          </paper-input>
+
+          <paper-input class="inline" label="Author" value="{{author}}"></paper-input>
+
+          <paper-button suffix="" noink="" hidden$="[[!canAddMedia]]" on-click="showUploads">Next
+          </paper-button>
+
+        </div>
+      </section>
+
+      <section>
+        <div class="layout horizontal flex">
+          <h3 class="flex">Add Media</h3>
+          <paper-icon-button id="reset" icon="undo" on-click="reset"></paper-icon-button>
+          <paper-tooltip for="reset">Start again</paper-tooltip>
+        </div>
+
+        <paper-input class="flex" label="Headline" value="{{headline}}">
+        </paper-input>
+
+
+        <div class="layout horizontal">
+          <paper-input class="inline" label="Author" value="{{author}}"></paper-input>
+          <span class="flex"></span>
+          <paper-toggle-button noink="" checked="{{enableBody}}">Body</paper-toggle-button>
+        </div>
+
+        <paper-textarea label="Body" value="{{body}}" hidden$="[[!enableBody]]" class="flex"></paper-textarea>
+
+        <p>Once all the media has been uploaded, it can can be submitted.</p>
+
+        <div id="actions" class="layout horizontal flex">
+          <span class="flex"></span>
+          <paper-button on-click="launchFileInput">
+            <iron-icon icon="add"></iron-icon>
+            &nbsp;Add Media
+          </paper-button>
+          <paper-button disabled$="[[!canSubmit]]" id="postButton" on-click="doSubmit" raised="">
+            <iron-icon icon="cloud-upload"></iron-icon>
+            &nbsp;Post
+          </paper-button>
+        </div>
+
+        <div id="thumbs">
+          <div class="layout horizontal">
+            <h4 class="flex">Media</h4>
+            <h5 hidden$="[[!hasMedia]]">Items: [[files.length]]</h5>
+          </div>
+
+          <div hidden$="[[hasMedia]]">
+            No Media
+          </div>
+
+          <template is="dom-repeat" items="[[files]]">
+            <aca-upload-item file="[[item]]"></aca-upload-item>
+          </template>
+        </div>
+
+        <input id="fileInput" type="file" accept="audio/*,image/*,video/*" multiple="" hidden="" on-change="handleFiles">
+      </section>
+
+      <section>
+        <h3>Preview Submit</h3>
+
+        <p>other stuff here...</p>
+        <paper-button raised="" disabled="">Submit</paper-button>
+      </section>
+
+    </iron-pages>
+
+    <paper-toast id="resetWarning" duration="0" text="One or more uploads in progress.">
+      <paper-button class="toast-hide-button" on-click="hideWarning">OK</paper-button>
+    </paper-toast>
+  </template>
+
+  </dom-module>
+<script src="aca-upload.js"></script></body></html>

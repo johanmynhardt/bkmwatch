@@ -1,0 +1,46 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-config">
+  <style>
+
+    paper-input {
+      margin-right: 0.5em;
+    }
+
+    paper-input.url {
+      width: 400px;
+    }
+
+  </style>
+
+  <template>
+
+    <!-- SIGNALS -->
+    <iron-signals on-iron-signal-config-updated="_configUpdated"></iron-signals>
+
+    <paper-material elevation="0">
+      <h2>Home</h2>
+
+      <div class="layout vertical">
+        <paper-card heading="Configuration">
+          <div class="card-content">
+            <div class="layout horizontal wrap">
+              <paper-input label="Support" placeholder="searchBase" value="{{searchBase}}" class="url"></paper-input>
+              <paper-input label="Tenant Key" placeholder="tk" value="{{tk}}"></paper-input>
+              <paper-input label="AppId" placeholder="appId" value="{{appId}}"></paper-input>
+              <paper-input label="Image Resize Server" placeholder="irsBase" value="{{irsBase}}" class="url"></paper-input>
+            </div>
+          </div>
+          <div class="card-actions layout horizontal">
+            <div class="flex"></div>
+<!--             <paper-icon-button id="one" on-click="_alertLink" icon="link" title="Permalink"></paper-icon-button>           -->
+            <paper-icon-button id="two" raised="" on-click="_go" icon="save" title="Search!"></paper-icon-button>
+          </div>
+        </paper-card>
+      </div>
+
+    </paper-material>
+  </template>
+
+  </dom-module>
+<script src="aca-config.js"></script></body></html>

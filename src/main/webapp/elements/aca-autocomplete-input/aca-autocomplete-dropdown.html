@@ -1,0 +1,27 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-autocomplete-dropdown">
+
+  <style>
+
+    iron-dropdown {
+      -webkit-box-shadow: 1px 1px 12px 0px rgba(0,0,0,0.41);
+      -moz-box-shadow: 1px 1px 12px 0px rgba(0,0,0,0.41);
+      box-shadow: 1px 1px 12px 0px rgba(0,0,0,0.41);
+    }
+
+  </style>
+
+  <template>
+    <iron-dropdown id="dropdown" class="box-shadow">
+        <div class="dropdown-content">
+          <paper-listbox id="listbox">
+            <template is="dom-repeat" items="[[items]]">
+              <paper-item title$="id=[[item.id]]">[[item.label]]</paper-item>
+            </template>
+          </paper-listbox>
+        </div>
+    </iron-dropdown>
+  </template>
+
+  </dom-module><script src="aca-autocomplete-dropdown.js"></script></body></html>

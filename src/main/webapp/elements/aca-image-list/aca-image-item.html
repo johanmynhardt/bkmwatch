@@ -1,0 +1,91 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-image-item">
+  <style is="custom-style">
+
+    .caption {
+      font-weight: bold;
+      font-size: larger;
+    }
+
+    .custom-tooltip {
+      font-size: 9pt;
+    }
+
+    .image-info {
+      margin-top: 0.5em;
+    }
+
+    paper-fab {
+      width: 15px;
+      height: 15px;
+      color: #fff;
+      border: 1px solid white;
+      background-color: #666;
+      opacity: 0.8;
+      z-index: 9;
+      margin: 0.3em;
+    }
+
+    paper-fab.grey {
+      background-color: #333;
+    }
+
+    paper-fab.selected {
+      float: right;
+      background-color: #337ab7;
+      opacity: 1;
+    }
+
+    div#fabs {
+      position: absolute;
+    }
+
+    paper-tooltip {
+      --paper-tooltip-background: #000;
+    }
+
+
+  </style>
+
+  <template>
+    <paper-card elevation="0">
+      <div id="image">
+        <div id="fabs" class="horizontal layout">
+          <paper-fab id="details" icon="search" title="View details" on-click="_showDetails"></paper-fab>
+          <template is="dom-if" if="[[app.config.standalone]]">
+            <a href$="[[_irsDownload(item)]]" download=""><paper-fab id="download" icon="file-download" title="Download"></paper-fab></a>
+          </template>
+          <template is="dom-if" if="[[selected]]">
+            <paper-fab id="selected" icon="check" class="selected"></paper-fab>
+          </template>
+        </div>
+
+        <template is="dom-if" if="[[item.imageURL]]">
+          <div style$="[[_computeThumbDims(item, 'style')]]">
+          <iron-image style$="[[_computeThumbDims(item, 'style')]]" src$="[[_irsThumb(item)]]" sizing="cover" preload="" fade="" on-click="_toggleImage"></iron-image>
+          </div>
+
+        </template>
+
+
+        <paper-tooltip for="image" position="top" class="custom-tooltip">
+          <div class="custom-tooltip">
+            <template is="dom-if" if="[[item.caption]]">
+              <div class="caption">Caption</div>
+              <div class="content">[[item.caption]]</div>
+            </template>
+
+            <div class="image-info">
+              <strong>Info:</strong> [[item.width]]x[[item.height]] ([[item.mimeType]])
+            </div>
+          </div>
+
+        </paper-tooltip>
+      </div>
+    </paper-card>
+
+  </template>
+
+  </dom-module>
+<script src="aca-image-item.js"></script></body></html>

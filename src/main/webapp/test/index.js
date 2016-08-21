@@ -1,0 +1,4 @@
+'use strict';
+
+WCT.loadSuites(['my-greeting-basic.html', 'my-list-basic.html']);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInRlc3QvaW5kZXguanMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSxJQUFJLFVBQUosQ0FBZSxDQUFDLHdCQUFELEVBQTJCLG9CQUEzQixDQUFmIiwiZmlsZSI6InRlc3QvaW5kZXguanMiLCJzb3VyY2VzQ29udGVudCI6WyJXQ1QubG9hZFN1aXRlcyhbJ215LWdyZWV0aW5nLWJhc2ljLmh0bWwnLCAnbXktbGlzdC1iYXNpYy5odG1sJ10pOyJdLCJzb3VyY2VSb290IjoiL3NvdXJjZS8ifQ==

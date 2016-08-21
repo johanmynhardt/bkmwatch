@@ -1,0 +1,36 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-article-list-item.html">
+
+</head><body><dom-module id="aca-article-list">
+
+<style is="custom-style">
+    paper-card {
+      width: 25em;
+      /*       height: 25em; */
+    }
+
+    paper-fab#insert {
+      position: fixed;
+      background-color: #337ab7;
+      right: 20px;
+      top: 85px;
+      z-index: 9999;
+    }
+  </style>
+
+  <template>
+    <iron-signals on-iron-signal-article-toggled="_articleToggled"></iron-signals>
+
+    <template is="dom-if" if="[[_showInsertFab]]">
+        <paper-fab id="insert" icon="forward" title="Insert" on-click="_sendToInitiator"></paper-fab>
+    </template>
+
+    <div class="horizontal layout wrap">
+      <template id="articles" is="dom-repeat" items="{{articles}}" as="article">
+        <aca-article-list-item item="{{article}}" selected="[[_isSelected(article)]]"></aca-article-list-item>
+      </template>
+    </div>
+  </template>
+
+  </dom-module>
+<script src="aca-article-list.js"></script></body></html>

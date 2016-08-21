@@ -1,0 +1,52 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-search-article-parameters.html">
+<link rel="import" href="aca-search-filter.html">
+<link rel="import" href="aca-search-pager.html">
+<link rel="import" href="aca-search-result-counter.html">
+<link rel="import" href="aca-search-typeselector.html">
+
+</head><body><dom-module id="aca-search">
+
+  <style>
+    :host {
+      display: block;
+    }
+
+  </style>
+
+  <template>
+    <style include="shared-styles"></style>
+
+    <iron-signals on-iron-signal-page-next="fetchNext" on-iron-signal-page-previous="fetchPrevious" on-iron-signal-do-search="doSearch">
+    </iron-signals>
+
+    <iron-ajax id="ajaxSearch" method="post" handle-as="json" content-type="application/json" url$="[[requestUrl]]" last-response="{{pageData}}" on-response="handleResponse" loading="{{loading}}" body="{}">
+    </iron-ajax>
+
+    <!-- search box -->
+
+    <iron-a11y-keys id="keys" target="[[target]]" keys="enter" on-keys-pressed="doSearch"></iron-a11y-keys>
+
+    <div class="layout horizontal">
+      <paper-input id="submit" label="Enter search query" value="{{searchModel}}" class="layout horizontal center">
+        <paper-icon-button suffix="" icon$="[[_filterDropdownIcon]]" on-click="toggleFilter"></paper-icon-button>
+        <paper-button suffix="" noink="" on-click="doSearch" hidden$="[[_filterDisplay]]">
+          <iron-icon icon="search"></iron-icon>
+          Search
+        </paper-button>
+      </paper-input>
+    </div>
+
+    <!-- search filter -->
+    <aca-search-filter id="mySearchFilter" display-filter="{{_filterDisplay}}" search-type="{{searchType}}" start-date="{{startDate}}" end-date="{{endDate}}" title-filter="{{titleFilter}}" section-filter="{{sectionFilter}}">
+      <aca-search-typeselector selected="{{searchType}}"></aca-search-typeselector>
+    </aca-search-filter>
+
+
+
+    <content></content>
+
+  </template>
+
+  </dom-module>
+<script src="aca-search.js"></script></body></html>

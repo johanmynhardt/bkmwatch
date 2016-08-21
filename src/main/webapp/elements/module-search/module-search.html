@@ -1,0 +1,67 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="module-search">
+  <style is="custom-style">
+    paper-fab#insert {
+      position: fixed;
+      background-color: #337ab7;
+      right: 20px;
+      top: 85px;
+      z-index: 9999;
+    }
+  </style>
+
+  <template>
+    <!-- IRON-SIGNALS -->
+    <iron-signals on-iron-signal-search-loading-changed="searchLoadingChanged">
+    </iron-signals>
+
+    <!-- SEARCH FORM -->
+    <aca-search id="acasearch" page-size="50" search-model="{{searchModel}}" results="{{results}}" for-query="{{forQuery}}" first-search-returned="{{firstSearchReturned}}" search-type="{{searchType}}" total-elements="{{totalElements}}" search-duration="{{searchDuration}}" min-submit="0">
+      <aca-search-result-counter hidden$="[[!firstSearchReturned]]" total-elements="[[totalElements]]" search-duration="[[searchDuration]]">
+      </aca-search-result-counter>
+
+    </aca-search>
+
+    <!-- ACTIONS -->
+    <template is="dom-if" if="[[_showInsertFab]]">
+        <paper-fab id="insert" icon="forward" title="Insert" on-click="sendToInitiator"></paper-fab>
+    </template>
+
+    <template is="dom-if" if$="[[_typeImage]]">
+      <!-- IMAGE LIST -->
+
+      <aca-image-list show-selection="{{showSelection}}" articles="[[results]]" show-result-count="" for-result="[[forQuery]]" seltd="{{seltd}}" first-search-returned="[[firstSearchReturned]]"></aca-image-list>
+    </template>
+
+    <template is="dom-if" if$="[[_typeVideo]]">
+      <aca-video-list articles="[[results]]" show-result-count="" for-result="[[forQuery]]" seltd="{{seltd}}" first-search-returnd="[[firstSearchReturned]]">
+      </aca-video-list>
+    </template>
+
+    <template is="dom-if" if$="[[_typeArticle]]">
+      <aca-article-list articles="[[results]]" selected-item="{{seltd}}" first-search-returned="[[firstSearchReturned]]"></aca-article-list>
+    </template>
+
+
+    <!-- PROGRESS INDICATOR / LOAD MORE -->
+    <div class="horizontal layout flex">
+      <span class="flex"></span>
+
+      <template is="dom-if" if="[[firstSearchReturned]]">
+        <template is="dom-if" if="[[hasNext]]">
+          <template is="dom-if" if="[[!searchInProgress]]">
+            <paper-button on-click="_nextPage" raised=""><iron-icon icon="expand-more"></iron-icon>more</paper-button>
+          </template>
+        </template>
+      </template>
+
+      <!--<template is="dom-if" if="[[searchInProgress]]">-->
+        <!--<paper-progress indeterminate></paper-progress>-->
+      <!--</template>-->
+    </div>
+
+  </template>
+
+  </dom-module>
+<script src="module-search.js"></script></body></html>

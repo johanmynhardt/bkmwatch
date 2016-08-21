@@ -1,0 +1,147 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-video-dialog">
+  <style>
+    .paper-dialog-0 > *:first-child {
+      margin-top: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    paper-dialog, aca-video-dialog {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: 0;
+    }
+
+    .topAlign {
+      vertical-align: top;
+    }
+
+    #videoElement {
+      margin-right: 1em;
+    }
+
+    .dataRow {
+      border-bottom: 1px solid #eee;
+      border-radius: 0.5em;
+    }
+
+    .videoWidth {
+      max-width: 640px;
+    }
+
+    .capitalize {
+      text-transform: capitalize;
+    }
+
+    #videoAndCaption {
+      display: inline-block;
+      max-width: 640px;
+      /*border: 1px solid black;*/
+    }
+  </style>
+
+  <template>
+
+    <iron-ajax id="metaAjax" url$="[[infoUrl]]" content-type="application/json" method="post" handle-as="json" last-response="{{_lookupResponse}}" last-error="{{_lastError}}"></iron-ajax>
+
+    <paper-dialog id="detailsDialog" class="layout vertical flex">
+      <paper-toolbar>
+        <iron-icon icon="av:play-circle-outline"></iron-icon>
+        <paper-icon-button icon="arrow-back" on-click="_stopAndExit"></paper-icon-button>
+        <span class="title">[[_caption(video)]]</span>
+        <!--Fullscreen is buggy. Very sad, this was working well, but something broke it. -->
+        <!--<paper-icon-button icon="fullscreen" on-click="_fullscreen"></paper-icon-button>-->
+        <aca-copy-to-clipboard data-text="[[video.references.0.url]]"></aca-copy-to-clipboard>
+        <aca-file-download-link target-location="[[video.references.0.url]]"></aca-file-download-link>
+      </paper-toolbar>
+
+      <!--<paper-tabs selected="{{selectedTab}}">-->
+        <!--<paper-tab>x</paper-tab>-->
+        <!--<paper-tab>y</paper-tab>-->
+        <!--<paper-tab>z</paper-tab>-->
+      <!--</paper-tabs>-->
+
+      <paper-dialog-scrollable class="layout vertical flex">
+
+        <iron-pages selected="[[selectedTab]]">
+          <div id="videoContainer">
+            <div id="videoAndCaption">
+              <video id="videoElement" width="640" height="360" title$="[[_caption(video)]]">
+                <source src$="[[video.references.0.url]]">
+                Your browser does not support the html5 video tag.
+              </video>
+              <div class="layout horizontal flex">
+                <span class="flex"></span>
+                <paper-icon-button id="playPauseButton" icon="av:pause-circle-outline" on-click="_togglePlay"></paper-icon-button>
+                <span class="flex"></span>
+              </div>
+              <paper-card class="topAlign" elevation="0">
+                <div class="card-content">
+                  <h3>Caption</h3>
+
+                  <div class="dataRow" hidden$="[[!video.caption]]">
+                    [[video.caption]]
+                  </div>
+
+                  <div class="dataRow videoWidth" hidden$="[[video.caption]]">
+                    <em>No caption available.</em>
+                  </div>
+                </div>
+              </paper-card>
+            </div>
+
+            <!--USAGE -->
+            <paper-card class="topAlign videoWidth" elevation="0">
+              <div class="card-content">
+                <h3>Usage</h3>
+
+                <table>
+                  <template is="dom-repeat" items="[[_usageTuples]]">
+                    <tr>
+                      <td class="dataRow capitalize">[[item.0]]</td>
+                      <td class="dataRow">[[item.1]]</td>
+                    </tr>
+                  </template>
+
+                </table>
+              </div>
+            </paper-card>
+
+
+
+            <!--<paper-card class="topAlign" elevation="0">-->
+              <!--<div class="card-content">-->
+                <!--<h3>Reference data</h3>-->
+
+                <!--<table>-->
+                  <!--<template is="dom-repeat" items="[[_map(video.references.0)]]">-->
+                    <!--<tr >-->
+                      <!--<td class="dataRow capitalize">[[item.0]]</td>-->
+                      <!--<td class="dataRow">[[item.1]]</td>-->
+                    <!--</tr>-->
+                  <!--</template>-->
+
+                <!--</table>-->
+
+              <!--</div>-->
+            <!--</paper-card>-->
+
+          </div>
+
+          <div> </div>
+
+          <div> </div>
+        </iron-pages>
+
+      </paper-dialog-scrollable>
+      <!--<div id="bottomContainer"></div>-->
+    </paper-dialog>
+
+  </template>
+
+  </dom-module><script src="aca-video-dialog.js"></script></body></html>

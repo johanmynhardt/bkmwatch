@@ -1,0 +1,22 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-search-pager">
+
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+
+  <template>
+
+    <template is="dom-if" if="[[manyPages(pages)]]">
+      <paper-icon-button icon="chevron-left" on-click="signalPrevious" disabled="[[!hasPrevious]]"></paper-icon-button>
+      <span>page [[displayPage(page)]] of [[pages]]</span>
+      <paper-icon-button icon="chevron-right" on-click="signalNext" disabled="[[!hasNext]]"></paper-icon-button>
+    </template>
+
+  </template>
+
+  </dom-module>
+<script src="aca-search-pager.js"></script></body></html>

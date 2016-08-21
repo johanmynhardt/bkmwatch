@@ -1,0 +1,37 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-video-item">
+  <template>
+    <style>
+      #caption {
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      paper-card {
+        margin-bottom: 0.2em;
+      }
+    </style>
+    <paper-card id="videoCard">
+      <div class="card-content">
+        <div>
+          <video id="videoElement" width="320" height="180" title="[[video.caption]]">
+            <source src$="[[video.references.0.url]]">
+            Your browser does not support the html5 video tag.
+          </video>
+        </div>
+        <div id="caption">
+          [[_caption(video)]]
+          <paper-tooltip for="caption">[[_caption(video)]]</paper-tooltip>
+        </div>
+      </div>
+      <div class="card-actions horizontal layout flex center">
+        <div>[[_title(video)]]</div>
+        <span class="flex"></span>
+        <paper-icon-button icon="av:play-circle-outline" on-click="_showVideoDetails"></paper-icon-button>
+      </div>
+    </paper-card>
+  </template>
+
+  </dom-module><script src="aca-video-item.js"></script></body></html>

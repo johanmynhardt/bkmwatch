@@ -1,0 +1,22 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-search-article-parameters">
+  <style></style>
+
+  <template>
+
+<!--     <iron-ajax>
+    </iron-ajax> -->
+
+    <paper-dropdown-menu id="titleSelector" label="Title" selected-item="{{selected}}">
+      <paper-listbox id="listbox" class="dropdown-content" attr-for-selected="data">
+        <paper-item data="all">None Selected (All)</paper-item>
+        <template is="dom-repeat" items="[[titles]]">
+          <paper-item data="{{item.id}}">[[item.id]]: [[item.value]] <sub>(TODO more info)</sub></paper-item>
+        </template>
+      </paper-listbox>
+    </paper-dropdown-menu>
+  </template>
+
+  </dom-module>
+<script src="aca-search-article-parameters.js"></script></body></html>

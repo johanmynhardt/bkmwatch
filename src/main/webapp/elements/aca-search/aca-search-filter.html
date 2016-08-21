@@ -1,0 +1,77 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-search-filter">
+  <style>
+    :host {
+      display: block;
+    }
+
+    paper-input {
+      margin-right: 0.5em;
+    }
+
+    /*paper-input.wider {*/
+      /*width: 25em;*/
+    /*}*/
+  </style>
+
+  <template>
+    <iron-a11y-keys id="keys" target="[[target]]" keys="enter" on-keys-pressed="_fireSearch"></iron-a11y-keys>
+
+    <!--     form with start and end date -->
+    <!--     clear button visible when either start or end is specified -->
+    <div id="wrapper">
+      <template is="dom-if" if="[[displayFilter]]">
+
+        <paper-material elevation="1" style="padding: 1em; margin-bottom: 1em;">
+
+          <aca-autocomplete-input title="Selected Titles:" label="Enter new title" value="{{titleFilter}}" for="titleFilter" selected="{{selectedTitles}}" db="titles" selection-listener="[[titleSelected()]]"></aca-autocomplete-input>
+
+          <aca-autocomplete-input title="Selected Sections:" label="Enter new section" value="{{sectionFilter}}" for="sectionFilter" selected="{{selectedSections}}" db="sections" min-expand="1"></aca-autocomplete-input>
+
+          <div class="vertical layout">
+            <div class="horizontal layout">
+              <paper-input id="startDate" class="wider" label="Start Date" on-click="_displayPickerStart" value="[[_startDateDisplay]]"></paper-input>
+              <paper-input id="endDate" class="wider" label="End Date" on-click="_displayPickerEnd" value="[[_endDateDisplay]]"></paper-input>
+            </div>
+            <p></p>
+            <div class="horizontal layout">
+              <span class="flex"></span>
+              <span class="flex"></span>
+              <span class="flex"></span>
+              <span class="flex">
+              </span>
+              <paper-button on-click="_clearValues" hidden$="{{!_showClearValues}}" title="Clear fields">
+                <iron-icon icon="clear"></iron-icon>
+                Clear
+              </paper-button>
+              <paper-button class="" on-click="_fireSearch" noink="" raised="">
+                <iron-icon icon="search"></iron-icon>
+                Search
+              </paper-button>
+
+            </div>
+          </div>
+        </paper-material>
+
+      <!-- ARTICLE PARAMETERS -->
+      <template is="dom-if" if="[[_showArticleParameters]]">
+<!--         <aca-search-article-parameters></aca-search-article-parameters> -->
+      </template>
+    </template>
+    </div>
+
+    <content></content>
+
+    <!-- Dialog -->
+    <paper-dialog id="dialog" class="paper-date-picker-dialog" modal="" opened="{{_dialogOpened}}">
+      <paper-date-picker id="picker" narrow=""></paper-date-picker>
+      <div class="buttons">
+        <paper-button dialog-dismiss="">Cancel</paper-button>
+        <paper-button dialog-confirm="">Select</paper-button>
+      </div>
+    </paper-dialog>
+  </template>
+
+  </dom-module>
+<script src="aca-search-filter.js"></script></body></html>

@@ -1,0 +1,30 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-image-item.html">
+
+</head><body><dom-module id="aca-image-list">
+
+
+  <style>
+
+    :host {
+      display: block;
+      z-index: 100;
+    }
+
+  </style>
+
+  <template>
+    <style include="shared-styles"></style>
+
+    <iron-signals on-iron-signal-toggle-image="toggleItem" on-iron-signal-show-image-details="_showImageDetails" on-iron-signal-search-loading-changed="searchLoadingChanged">
+    </iron-signals>
+
+    <template id="articleImages" is="dom-repeat" items="[[_imageArticles]]" as="image">
+      <aca-image-item model-item="[[image]]" selected="[[image.selected]]" item="[[getMediaItemReferenceAt(image, 0)]]"></aca-image-item>
+    </template>
+
+    <aca-meta-dialog id="metaDialog" heading="Image Details"></aca-meta-dialog>
+  </template>
+
+  </dom-module>
+<script src="aca-image-list.js"></script></body></html>

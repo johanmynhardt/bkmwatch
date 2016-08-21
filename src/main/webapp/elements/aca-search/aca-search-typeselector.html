@@ -1,0 +1,35 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-search-typeselector">
+
+  <style>
+    :host {
+      display: flex;
+      margin-bottom: 1em;
+    }
+  </style>
+
+  <template>
+
+    <iron-signals on-iron-signal-config-updated="_configUpdated"></iron-signals>
+
+    <style>
+      paper-button[raised] {
+        border-bottom: 2px solid #727272;
+        box-shadow: none;
+      }
+    </style>
+
+      <div id="itemContainer">
+        <template is="dom-repeat" items="[[types]]" as="type">
+          <paper-button type$="{{type.type}}" noink="" on-click="_changeSelection">
+            <iron-icon icon="{{type.icon}}"></iron-icon>
+            {{type.label}}
+          </paper-button>
+        </template>
+        <content></content>
+      </div>
+  </template>
+
+  </dom-module>
+<script src="aca-search-typeselector.js"></script></body></html>

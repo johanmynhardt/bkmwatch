@@ -1,0 +1,53 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="simple-image-list">
+  <style>
+    :host {
+      display: block;
+    }
+
+    paper-material {
+      padding: 1em;
+      margin: 0.5em;
+    }
+
+    paper-dialog#copyDialog {
+      width: 600px;
+    }
+  </style>
+
+  <template>
+    <paper-toolbar>
+      <h2>{{title}} <template is="dom-if" if="{{forResult}}">for '{{forResult}}'</template> <template is="dom-if" if="{{showResultCount}}"> ([[items.length]])</template></h2>
+      <div class="flex"></div>
+      <template is="dom-if" if="{{canShowCopy}}">
+        <template is="dom-if" if="{{canSendToInitiator}}"><paper-icon-button icon="input" alt="baobab-insert" title="Insert back in Baobab" on-click="sendToInitiator"></paper-icon-button></template>
+        <paper-icon-button icon="content-copy" alt="content-copy" title="Copy to clipboard" on-click="showDialogForCopy"></paper-icon-button>
+      </template>
+    </paper-toolbar>
+    <div class="flex layout center">
+      <template is="dom-repeat" items="{{items}}" as="item">
+        <simple-image-item config="[[config]]" item="[[item]]" on-click="toggleImage"></simple-image-item>
+      </template>
+
+      <array-selector id="selector" items="{{items}}" selected="{{selected}}"></array-selector>
+    </div>
+
+    <paper-dialog id="copyDialog" auto-fit-on-attach="">
+      <h2 width="500">Images as Tags</h2>
+      <div>
+        <!-- <paper-input id="copyContent" label="HTML for selected images" readonly focussed multiline rows="10"></paper-input> -->
+        <code id="copyContent">[[copyContent]]</code>
+        <!-- <paper-textarea id="copyContent" label="HTML for selected images" readonly focussed multiline rows="5" onclick="document.getElementById('textarea').select();"></paper-textarea> -->
+      </div>
+
+      <div class="buttons">
+        <paper-button onclick="document.execCommand('copy'); alert('copied selection')">Copy</paper-button>
+        <paper-button dialog-dismiss="">Close</paper-button>
+      </div>
+    </paper-dialog>
+
+  </template>
+
+  </dom-module>
+<script src="simple-image-list-old.js"></script></body></html>

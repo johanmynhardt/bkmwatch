@@ -1,0 +1,23 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="bkm-browse">
+  <template>
+
+    <iron-ajax id="ajaxSearch" method="get" handle-as="json" content-type="application/json" url$="[[_url]]" last-response="{{alerts}}" on-response="handleResponse" loading="{{loading}}" auto="">
+    </iron-ajax>      
+
+    <bkm-alerts-table items="[[alerts]]">
+        <div class="horizontal layout flex">
+            <span class="flex"></span>
+            <paper-icon-button icon="chevron-left" on-click="previousPage" hidden$="[[_firstPage]]">
+                
+            </paper-icon-button>
+            <paper-icon-button icon="chevron-right" on-click="nextPage" hidden$="[[_lastPage]]">
+                
+            </paper-icon-button>
+        </div>
+    </bkm-alerts-table>
+  </template>
+
+  </dom-module>
+<script src="bkm-browse.js"></script></body></html>

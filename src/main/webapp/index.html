@@ -1,44 +1,13 @@
-<!DOCTYPE html>
-<html ng-app="app">
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>BKM Watch Patroller Alerts</title>
-    <link rel="stylesheet" href="bower_components/foundation/css/foundation.css"/>
-    <link rel="stylesheet" href="bower_components/foundation/css/normalize.css"/>
-    <script src="bower_components/jquery/dist/jquery.js"></script>
-    <script src="bower_components/angular/angular.js"></script>
-    <script src="bower_components/angular-resource/angular-resource.js"></script>
-    <script src="bower_components/angular-route/angular-route.js"></script>
-    <script src="bower_components/foundation/js/foundation.js"></script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="description" content="BKM-Watch App"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Polymer Starter Kit"><title>BKM Watch</title><meta name="theme-color" content="#333"><link rel="manifest" href="manifest.json"><meta name="msapplication-TileColor" content="#333"><meta name="mobile-web-app-capable" content="yes"><meta name="application-name" content="BKM-Watch"><link rel="icon" sizes="192x192" href="images/touch/chrome-touch-icon-192x192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="Baobab::Compost"><link rel="apple-touch-icon" href="images/touch/apple-touch-icon.png"><meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png"><link rel="stylesheet" href="styles/main.css"><script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script><link rel="import" href="elements/elements.html"><style is="custom-style" include="shared-styles"></style><script>
+    (function() {
+      'use strict';
 
-    <script src="app/app.js"></script>
-    <script src="app/config.js"></script>
-    <script src="app/shared/services/services.js"></script>
-    <script src="app/browse/ctrl/browse_controller.js"></script>
-    <script src="app/search/ctrl/search_controller.js"></script>
-    <script src="app/shared/ctrl/breadcrumb_controller.js"></script>
+      console.debug('window: ', window.location);
 
-</head>
-<body>
-
-<div class="row">
-    <h1>BKM Watch Alert Browser</h1>
-</div>
-
-<div class="row">
-
-    <ul class="breadcrumbs" ng-controller="BreadcrumbController">
-        <li><a href="#/">Home</a></li>
-        <li><a href="#/browse">Browse</a></li>
-        <li><a href="#/search">Search</a></li>
-        <li><a ng-click="updateAlerts();">Update</a></li>
-    </ul>
-
-    <div ng-view>
-
-    </div>
-</div>
-
-
-</body>
-</html>
+      var l = window.location;
+      var b = document.createElement('base');
+      b.setAttribute('href', l.protocol + '//' + l.host + l.pathname);
+      console.info('appending child: ', b);
+      document.querySelector('head').appendChild(b);
+    })();
+    </script></head><body unresolved="" class="fullbleed layout vertical"><span id="browser-sync-binding"></span><template is="dom-bind" id="app"><paper-scroll-header-panel main="" id="headerPanelMain" fixed=""><paper-toolbar id="mainToolbar"><iron-icon on-click="goHome" icon="home"></iron-icon><span class="flex"></span><paper-icon-button id="uploadIcon" icon="list" onclick="page.redirect('/browse');"></paper-icon-button><paper-tooltip for="uploadIcon">Brows Alerts</paper-tooltip><paper-icon-button id="searchIcon" icon="search" onclick="page.redirect('/search');"></paper-icon-button><paper-tooltip for="searchIcon">Search</paper-tooltip><div class="middle middle-container center horizontal layout"><div class="app-name" on-click="goToIndex">BKM-Watch</div></div><paper-progress id="searchProgress" class="centered fit" hidden="true"></paper-progress></paper-toolbar><div class="content"><iron-pages attr-for-selected="data-route" selected="{{route}}"><section data-route="home"><h1><iron-icon icon="home"></iron-icon>Home</h1><paper-material>For more information on BKM Watch, see <a href="http://bkmwatch.org.za">bkmwatch.org.za</a></paper-material></section><section data-route="search"><h1><iron-icon icon="search"></iron-icon>Search</h1><paper-material><bkm-search></bkm-search></paper-material></section><section data-route="browse"><h1><iron-icon icon="list"></iron-icon>Browse</h1><paper-material><bkm-browse page="[[browse.page]]" per-page="[[browse.perPage]]"></bkm-browse></paper-material></section></iron-pages></div></paper-scroll-header-panel><paper-toast id="toast"><paper-button class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">OK</paper-button></paper-toast><paper-toast id="permaToast" duration="0"><paper-button class="toast-hide-button" onclick="app.$.permaToast.hide()">OK</paper-button></paper-toast></template><script src="scripts/app.js"></script><script src="scripts/imgutils.js"></script></body></html>

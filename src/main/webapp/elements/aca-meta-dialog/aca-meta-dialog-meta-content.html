@@ -1,0 +1,57 @@
+<html><head><link rel="import" href="../../bower_components/polymer/polymer.html">
+
+</head><body><dom-module id="aca-meta-dialog-meta-content">
+
+  <style>
+    :root {
+      border: 1px solid red;
+    }
+
+    div.datarow {
+      width:100%;
+      padding: 0.3em;
+      text-overflow: ellipsis;
+      border-bottom: 1px solid #666666;
+    }
+
+    div.datarow>.itemkey {
+      width: 25%;
+    }
+
+    div.datarow>.itemvalue {
+      width: 75%;
+    }
+  </style>
+
+  <template>
+
+    <iron-ajax id="metaAjax" url$="[[infoUrl]]" content-type="application/json" last-response="{{metaResponse}}"></iron-ajax>
+
+
+    <div class="layout vertical" style="width:100%;">
+
+      <p>
+        <paper-tabs selected="{{selectedTab}}">
+          <template is="dom-repeat" items="[[_profiles]]">
+            <paper-tab>[[item.label]]</paper-tab>
+          </template>
+        </paper-tabs>
+      </p>
+
+      <iron-list items="[[_currentProfile.data]]" as="item">
+        <template>
+          <div class="layout horizontal datarow">
+            <div class="itemkey">
+              [[keyFrom(item)]]
+            </div>
+            <div class="itemvalue">
+              [[valueFrom(item)]]
+            </div>
+          </div>
+        </template>
+      </iron-list>
+    </div>
+  </template>
+
+  </dom-module>
+<script src="aca-meta-dialog-meta-content.js"></script></body></html>
