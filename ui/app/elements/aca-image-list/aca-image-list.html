@@ -1,0 +1,255 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-image-item.html">
+
+<dom-module id="aca-image-list">
+
+
+  <style>
+
+    :host {
+      display: block;
+      z-index: 100;
+    }
+
+  </style>
+
+  <template>
+    <style include="shared-styles"></style>
+
+    <iron-signals on-iron-signal-toggle-image="toggleItem"
+                  on-iron-signal-show-image-details="_showImageDetails"
+                  on-iron-signal-search-loading-changed="searchLoadingChanged">
+    </iron-signals>
+
+    <template id="articleImages" is="dom-repeat" items="[[_imageArticles]]" as="image">
+      <aca-image-item model-item="[[image]]" selected="[[image.selected]]" item="[[getMediaItemReferenceAt(image, 0)]]"></aca-image-item>
+    </template>
+
+    <aca-meta-dialog id="metaDialog" heading="Image Details"></aca-meta-dialog>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-image-list',
+        properties: {
+          item: {
+            type: String,
+            value: '(not set)'
+          },
+          articles: {
+            type: Array,
+            notify: true
+          },
+          title: {
+            type: String,
+            value: 'Results'
+          },
+          showResultCount: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          seltd: {
+            type: Object,
+            value: function() {return [];},
+            //readOnly: true,
+            reflectToAttribute: true,
+            //notify: true
+          },
+          canShowCopy: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          canSendToInitiator: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          hasSelection: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          showSelection: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          _imageArticles: {
+            type: Array,
+            value: [],
+            notify: true
+          }
+        },
+
+        observers: [
+          'selectedChanged(selected.*)', 'selectedChanged(seltd.*)'
+        ],
+
+        getMediaItemReferenceAt: function(mediaItem, idx) {
+          var reference = mediaItem.references[idx];
+          return {
+            caption: mediaItem.caption,
+            altText: reference.alternateText,
+            imageURL: reference.imageURL,
+            width: reference.width,
+            height: reference.height,
+            mimeType: reference.mimeType,
+            source: reference.imageSource,
+            selected: false
+          };
+        },
+
+        toggleItem: function(e) {
+
+          console.info('toggleItem: %o', e.detail);
+
+          var image = e.detail;
+          console.log('toggle image: ', image);
+
+          image.selected = !image.selected;
+
+          if (image.selected) {
+            this._addItem(image);
+          } else {
+            this._removeItem(image);
+          }
+
+          var tmp = this.setld;
+          this.setld = [];
+          this.setld = tmp;
+          this.selected = tmp;
+          this.notifyPath('setld', this.setld);
+          this.notifyPath('selected', this.setld);
+          Polymer.dom.flush();
+        },
+
+        _hasItems: function(collection) {
+          return collection.length > 0;
+        },
+
+        _removeItem: function(toRemove) {
+          var index = this.seltd.indexOf(toRemove);
+          this.splice('seltd', index, 1);
+        },
+
+        _addItem: function(toAdd) {
+          this.push('seltd', toAdd);
+        },
+
+        hasSelection: function() {
+          var hasSelection = this.seltd.length > 0;
+          console.log('hasSelection: "', hasSelection);
+          return hasSelection;
+        },
+
+        /**
+         * Return the selected items back to the parent window.
+        */
+        sendToInitiator: function() {
+          if (window.opener) {
+            var message = JSON.stringify({
+              request: 'selected',
+              items: this.selected
+            });
+            if (message) {
+              console.info('sending selected: %s', message);
+              window.opener.postMessage(message, '*');
+            } else {
+              console.warn('no value to send.');
+            }
+          } else {
+            console.error('Can not send message. Window has no opener.');
+          }
+        },
+
+        /**
+         * JSON Stringified representation of the given item.
+         */
+        _itemAsString: function(item) {
+          return JSON.stringify(item, null, ' ');
+        },
+
+        heading: function(metaData) {
+          if (metaData.abstractSummary) {
+            return metaData.abstractSummary;
+          } else {
+            return 'No Heading';
+          }
+        },
+
+        dateFromLong: function(longDate) {
+          return new Date(longDate).toDateString();
+        },
+
+        itemsForSelection: function(itemsForSelection) {
+          var r = this;
+          itemsForSelection.forEach(function(item) {
+            console.log('itemForSelection: ', r.getMediaItemReferenceAt(item.mediaItems[0], 0));
+          });
+        },
+
+        selectedChanged: function(ch) {
+          console.log('ch: ', ch);
+          if (ch.path === 'seltd.length') {
+            this.hasSelection = ch.value > 0;
+            var data = ch.base;
+            this.showSelection = this.hasSelection;
+            this.fire('iron-signal', {name: 'selection-changed', data: data});
+          }
+        },
+
+        searchLoadingChanged: function(e) {
+          if (!e.detail.loading) {
+            this.set('_imageArticles', this._imagesFromArticles(this.articles));
+          }
+        },
+
+        _imagesFromArticles: function(articles) {
+          var allImages = [];
+          articles.forEach(function(article) {
+            allImages = _.concat(allImages, this._filterType(article, 'Image'));
+          }.bind(this));
+          return allImages;
+        },
+
+        _filterType: function(article, mediaType) {
+
+          if (article.mediaItems === undefined) {
+            return;
+          }
+
+          // .mediaItems
+
+          console.log('mediaItems: ', article.mediaItems.length);
+
+          var forCollection = _.curry(function(bucket, item) {
+            if (_.isEqual(item.mediaType, mediaType)) {
+              item.metaData = article.metaData;
+              var imgRef = this.getMediaItemReferenceAt(item, 0);
+
+              if (imgRef.imageURL !== undefined && imgRef.imageURL.length > 0) {
+                bucket.push(item);
+              } else {
+                console.warn('no imgURL in imgRef: ', imgRef);
+              }
+            }
+          }.bind(this));
+
+          var imageItems = [];
+          article.mediaItems.forEach(forCollection(imageItems));
+
+          return imageItems;
+        },
+
+        _showImageDetails: function(e) {
+          this.$.metaDialog.displayFor(e.detail);
+        }
+      });
+    })();
+  </script>
+</dom-module>

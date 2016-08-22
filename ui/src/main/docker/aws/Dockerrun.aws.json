@@ -1,0 +1,12 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "358035155708.dkr.ecr.eu-west-1.amazonaws.com/afrozaar/ashes-content-archive:1.4.0-npm",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": "8080"
+    }
+  ]
+}

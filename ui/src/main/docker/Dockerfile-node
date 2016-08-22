@@ -1,0 +1,12 @@
+FROM mhart/alpine-node:6
+MAINTAINER "Johan Mynhardt <johan.mynhardt@gmail.com>"
+VOLUME /tmp
+RUN sh -c 'mkdir /app'
+ADD package.json /app/package.json
+ADD node-app.js /app/node-app.js
+COPY dist /app/dist
+WORKDIR /app
+RUN sh -c 'npm install'
+RUN sh -c 'find node_modules'
+RUN sh -c 'touch /node-app.js'
+ENTRYPOINT ["node", "node-app.js"]

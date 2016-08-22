@@ -1,0 +1,228 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="module-search">
+  <style is="custom-style">
+    paper-fab#insert {
+      position: fixed;
+      background-color: #337ab7;
+      right: 20px;
+      top: 85px;
+      z-index: 9999;
+    }
+  </style>
+
+  <template>
+    <!-- IRON-SIGNALS -->
+    <iron-signals on-iron-signal-search-loading-changed="searchLoadingChanged">
+    </iron-signals>
+
+    <!-- SEARCH FORM -->
+    <aca-search id="acasearch" page-size="50"
+                search-model="{{searchModel}}"
+                results="{{results}}"
+                for-query={{forQuery}} first-search-returned="{{firstSearchReturned}}"
+                search-type="{{searchType}}" total-elements="{{totalElements}}"
+                search-duration="{{searchDuration}}"
+                min-submit="0"
+                >
+      <aca-search-result-counter
+          hidden$="[[!firstSearchReturned]]"
+          total-elements="[[totalElements]]"
+          search-duration="[[searchDuration]]">
+      </aca-search-result-counter>
+
+    </aca-search>
+
+    <!-- ACTIONS -->
+    <template is="dom-if" if="[[_showInsertFab]]">
+        <paper-fab id="insert" icon="forward" title="Insert" on-click="sendToInitiator"></paper-fab>
+    </template>
+
+    <template is="dom-if" if$="[[_typeImage]]">
+      <!-- IMAGE LIST -->
+
+      <aca-image-list show-selection="{{showSelection}}" articles="[[results]]"
+                         show-result-count for-result="[[forQuery]]"
+                         seltd="{{seltd}}"
+                         first-search-returned="[[firstSearchReturned]]"></aca-image-list>
+    </template>
+
+    <template is="dom-if" if$="[[_typeVideo]]">
+      <aca-video-list articles="[[results]]"
+                      show-result-count for-result="[[forQuery]]"
+                      seltd="{{seltd}}"
+                      first-search-returnd="[[firstSearchReturned]]">
+      </aca-video-list>
+    </template>
+
+    <template is="dom-if" if$="[[_typeArticle]]">
+      <aca-article-list articles="[[results]]"
+                        selected-item="{{seltd}}"
+                        first-search-returned="[[firstSearchReturned]]"></aca-article-list>
+    </template>
+
+
+    <!-- PROGRESS INDICATOR / LOAD MORE -->
+    <div class="horizontal layout flex">
+      <span class="flex"></span>
+
+      <template is="dom-if" if="[[firstSearchReturned]]">
+        <template is="dom-if" if="[[hasNext]]">
+          <template is="dom-if" if="[[!searchInProgress]]">
+            <paper-button on-click="_nextPage" raised><iron-icon icon="expand-more"></iron-icon>more</paper-button>
+          </template>
+        </template>
+      </template>
+
+      <!--<template is="dom-if" if="[[searchInProgress]]">-->
+        <!--<paper-progress indeterminate></paper-progress>-->
+      <!--</template>-->
+    </div>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'module-search',
+        properties: {
+          seltd: {
+            type: Object,
+            value: function() {return [];},
+            notify: true
+          },
+          showSelection: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          searchInProgress: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          searchType: {
+            type: String,
+            value: undefined,
+            notify: true
+          },
+          hasNext: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          _showInsertFab: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+
+          _typeArticle: {
+            type: Boolean,
+            value: false
+          },
+          _typeAudio: {
+            type: Boolean,
+            value: false
+          },
+          _typeImage: {
+            type: Boolean,
+            value: true
+          },
+          _typeVideo: {
+            type: Boolean,
+            value: false
+          },
+        },
+        observers: [
+          'seltdChange(seltd)',
+          '_showSelectionChanged(showSelection)',
+          'searchTypeChanged(searchType)'
+        ],
+        seltdChange: function(data) {
+          console.log('data: ', data);
+        },
+
+        selectionChanged: function(e, data, sourc) {
+          console.log('selectionChanged: ', data);
+          console.log('source: ', sourc);
+          this.seltd = data;
+          this.selected = data;
+        },
+
+        toggleShowSelection: function() {
+          this.showSelection = !this.showSelection;
+        },
+
+        getImageItem: function(mediaItem) {
+          let reference = mediaItem.references[0];
+          return {
+            caption: mediaItem.caption,
+            altText: reference.alternateText,
+            imageURL: reference.imageURL,
+            width: reference.width,
+            height: reference.height,
+            mimeType: reference.mimeType,
+            source: reference.imageSource,
+            selected: true
+          };
+        },
+
+        removeItem: function(e) {
+          let idx = this.seltd.indexOf(e.model.item);
+          this.splice('seltd', idx, 1);
+        },
+
+        sendToInitiator: function() {
+          app.sendToInitiator('selected', 'items', this.seltd);
+        },
+
+        _nextPage: function() {
+          this.$.acasearch.nextPage();
+        },
+
+        _hasNext: function(hasNext) {
+          console.log('set hasNext: %s, searchInProgress: %s', hasNext, this.searchInProgress);
+          this.set('hasNext', hasNext);
+        },
+
+        searchLoadingChanged: function(e) {
+          app.$.searchProgress.toggleAttribute('indeterminate', e.detail.loading);
+          app.$.searchProgress.toggleAttribute('hidden', !e.detail.loading);
+          this._hasNext(e.detail.hasNext);
+          this.searchInProgress = e.detail.loading;
+        },
+
+        searchTypeChanged: function(newSearchType) {
+          console.log('newSearchType: ', newSearchType);
+
+          const logType = (props) => (type) => console.trace('typeFor %s: %s', type, props[type].value);
+
+          const typeMap = {
+            'type-media': 'Image',
+            'type-image': 'Image',
+            'type-audio': 'Audio',
+            'type-video': 'Video',
+            'type-article': 'Article',
+
+            isForType: (type, intended) => typeMap[type] ? typeMap[type].endsWith(intended) : false
+          };
+
+          this.set('_typeImage', typeMap.isForType(newSearchType, 'Image'));
+          this.set('_typeAudio', typeMap.isForType(newSearchType, 'Audio'));
+          this.set('_typeVideo', typeMap.isForType(newSearchType, 'Video'));
+          this.set('_typeArticle', typeMap.isForType(newSearchType, 'Article'));
+
+          ['_typeArticle', '_typeImage', '_typeAudio', '_typeVideo'].map(logType(this.properties));
+        },
+
+        _showSelectionChanged: function(newValue) {
+          console.info('showSelectionChanged: ', newValue);
+          this._showInsertFab = newValue && app.config.embedded;
+        }
+      });
+    })();
+  </script>
+</dom-module>

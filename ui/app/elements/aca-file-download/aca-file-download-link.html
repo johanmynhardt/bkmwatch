@@ -1,0 +1,41 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-file-download-link">
+  <style></style>
+
+  <template>
+    <paper-icon-button id="downloadLink"
+               icon="file-download"
+               on-click="followLink"></paper-icon-button>
+    <paper-tooltip for="downloadLink">[[title]]</paper-tooltip>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-file-download-link',
+        properties: {
+          targetLocation: {
+            type: String,
+            value: '',
+            notify: true
+          },
+
+          title: {
+            type: String,
+            value: 'Download'
+          }
+        },
+
+        followLink: function() {
+          console.trace('following link: ', this.targetLocation);
+          if (this.targetLocation) {
+            window.open(this.targetLocation);
+          }
+        }
+      });
+    })();
+  </script>
+</dom-module>

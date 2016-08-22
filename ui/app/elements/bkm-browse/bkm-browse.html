@@ -1,0 +1,133 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="bkm-browse">
+  <template>
+
+    <iron-ajax id="ajaxSearch"
+               method="get"
+               handle-as="json"
+               content-type="application/json"
+               url$="[[_url]]"
+               last-response="{{alerts}}"
+               on-response="handleResponse"
+               loading="{{loading}}"
+               auto>
+    </iron-ajax>      
+
+    <bkm-alerts-table items="[[alerts]]">
+        <div class="horizontal layout flex">
+            <span class="flex"></span>
+            <paper-icon-button icon="chevron-left" 
+                               on-click="previousPage" 
+                               hidden$="[[_firstPage]]">
+                
+            </paper-icon-button>
+            <paper-icon-button icon="chevron-right" 
+                               on-click="nextPage" 
+                               hidden$="[[_lastPage]]">
+                
+            </paper-icon-button>
+        </div>
+    </bkm-alerts-table>
+  </template>
+
+  <script>
+    class BkmBrowse {
+      beforeRegister() {
+        this.is = 'bkm-browse';
+
+        this.properties = {
+          alerts: {
+            type: Array,
+            value: []
+          },
+          page: {
+            type: Number,
+            value: 0,
+            observer: '_pageChanged'
+          },
+          perPage: {
+            type: Number,
+            value: 10,
+            observer: '_perPageChanged'
+          },
+
+          _firstPage: {
+            type: Boolean,
+            value: true
+          },
+
+          _lastPage: {
+            type: Boolean,
+            value: false
+          },
+
+          _url: {
+            type: String,
+            value: undefined
+          }
+        };
+      }
+
+      created() {
+      }
+
+      ready() {
+        //this.beta = ['a', 'b', 'c'].map((x) => '_' + x);
+      }
+
+      attached() {
+      }
+
+      detached() {
+      }
+
+      attributeChanged() {
+      }
+
+      handleResponse() {
+        this._firstPage = parseInt(this.page) === 0;
+        this._lastPage = this.alerts.length < this.perPage;
+      }
+
+      nextPage() {
+        let next = this._join(['/browse/', (parseInt(this.page)+1), '?perPage=', parseInt(this.perPage)]);
+        page.redirect(next);
+      }
+
+      previousPage() {
+        let previous = this._join(['/browse/', (parseInt(this.page)-1), '?perPage=', parseInt(this.perPage)]);
+        page.redirect(previous);
+      }
+
+      _updateUrl(page, perPage) {
+        // /record/alerts?page=[[page]]&amp;itemsPerPage=[[perPage]]
+        console.info('page: %s, perPage: %s', page, perPage);
+        if (page !== undefined && perPage !== undefined) {
+          this._url = 'record/alerts?page=' + page + '&itemsPerPage=' + perPage;
+
+
+          console.info('alerts: %s, perPage: %s', this.alerts.length, this.perPage);
+        } else {
+          console.info('not submitting url update: page=%s, perPage=%s', page, perPage);
+        }
+      }
+
+      _pageChanged(newPage) {
+        console.info('newPage: ', newPage);
+        this._updateUrl(newPage, this.perPage);
+      }
+
+      _perPageChanged(newPerPage) {
+        console.info('newPerPage: ', newPerPage);
+        this._updateUrl(this.page, this.perPage);
+      }
+
+      _join(items) {
+        return items.reduce((a,b) => a + b);
+      }
+    }
+
+    Polymer(BkmBrowse);
+  </script>
+</dom-module>

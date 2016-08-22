@@ -1,0 +1,119 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-config">
+  <style>
+
+    paper-input {
+      margin-right: 0.5em;
+    }
+
+    paper-input.url {
+      width: 400px;
+    }
+
+  </style>
+
+  <template>
+
+    <!-- SIGNALS -->
+    <iron-signals on-iron-signal-config-updated="_configUpdated"></iron-signals>
+
+    <paper-material elevation="0">
+      <h2>Home</h2>
+
+      <div class="layout vertical">
+        <paper-card heading="Configuration">
+          <div class="card-content">
+            <div class="layout horizontal wrap">
+              <paper-input label="Support" placeholder="searchBase" value="{{searchBase}}" class="url"></paper-input>
+              <paper-input label="Tenant Key" placeholder="tk" value="{{tk}}"></paper-input>
+              <paper-input label="AppId" placeholder="appId" value="{{appId}}"></paper-input>
+              <paper-input label="Image Resize Server" placeholder="irsBase" value="{{irsBase}}" class="url"></paper-input>
+            </div>
+          </div>
+          <div class="card-actions layout horizontal">
+            <div class="flex"></div>
+<!--             <paper-icon-button id="one" on-click="_alertLink" icon="link" title="Permalink"></paper-icon-button>           -->
+            <paper-icon-button id="two" raised on-click="_go" icon="save" title="Search!"></paper-icon-button>
+          </div>
+        </paper-card>
+      </div>
+
+    </paper-material>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-config',
+
+        properties: {
+          searchBase: {
+            type: String,
+            value: 'https://az-baobab-support.afrozaar.com'
+          },
+          contentBase: {
+            type: String,
+            value: 'https://az-baobab.afrozaar.com'
+          },
+          tk: {
+            type: String,
+            value: 'az'
+          },
+          appId: {
+            type: Number,
+            value: 8
+          },
+          apiL: {
+            type: Number,
+            value: 9
+          },
+          irsBase: {
+            type: String,
+            value: 'https://test-irs.afrozaar.com/image'
+          },
+          standalone: {
+            type: Boolean,
+            value: true
+          },
+          limitToType: {
+            type: String,
+            value: undefined
+          }
+        },
+
+        _alertLink: function() {
+          console.log('//TODO: alertLink');
+        },
+
+        _go: function() {
+
+          let seedConfig = {};// all this keys
+
+          _.keys(this.properties).forEach(function(key) {
+            seedConfig[key] = this[key];
+          }.bind(this));
+
+          console.info('saving from _go, seedConfig: ', seedConfig);
+
+          app.saveConfig(seedConfig);
+
+          page.redirect('/search');
+
+        },
+
+        /**
+         *  This will be called in standalone mode and only when the required keys are all present.
+         */
+        _configUpdated: function(e) {
+          console.log('_configUpdated: ', e);
+          const transferKeyTo = to => key => to[key] = e.detail[key];
+
+          _.keys(e.detail).forEach(transferKeyTo(this));
+        }
+      });
+    })();
+  </script>
+</dom-module>

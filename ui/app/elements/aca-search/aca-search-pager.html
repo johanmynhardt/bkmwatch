@@ -1,0 +1,66 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-search-pager">
+
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+
+  <template>
+
+    <template is="dom-if" if=[[manyPages(pages)]]>
+      <paper-icon-button icon="chevron-left" on-click="signalPrevious" disabled="[[!hasPrevious]]"></paper-icon-button>
+      <span>page [[displayPage(page)]] of [[pages]]</span>
+      <paper-icon-button icon="chevron-right" on-click="signalNext" disabled="[[!hasNext]]"></paper-icon-button>
+    </template>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-search-pager',
+        properties: {
+          page: {
+            type: Number,
+            value: 0
+          },
+          pages: {
+            type: Number,
+            value: 0,
+            notify: true
+          },
+          hasPrevious: {
+            type: Boolean
+          },
+          hasNext: {
+            type: Boolean
+          }
+        },
+        manyPages: function(pages) {
+          //console.log('pages: ', pages);
+          return pages > 1;
+        },
+        displayPage: function(page) {
+          //console.log('page: ', page+1);
+          return page + 1;
+        },
+        sendSignal: function(signal) {
+          var data = {name: signal, data: 'echo'};
+          //console.log('firing iron-signal: ', data);
+          this.fire('iron-signal', data);
+        },
+        signalPrevious: function() {
+          this.sendSignal('page-previous');
+        },
+        signalNext: function() {
+          this.sendSignal('page-next');
+        }
+      });
+    })();
+  </script>
+</dom-module>

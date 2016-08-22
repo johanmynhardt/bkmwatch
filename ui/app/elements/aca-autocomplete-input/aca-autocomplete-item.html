@@ -1,0 +1,40 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="aca-autocomplete-overlay.html">
+
+<dom-module id="aca-autocomplete-item">
+
+  <style>
+    paper-material {
+      padding: 3px;
+      border-radius: 8px;
+    }
+  </style>
+
+  <template>
+    <paper-material>
+      [[item.label]] <iron-icon icon="cancel" on-click="removeAutocompleteItem"></iron-icon>
+    </paper-material>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-autocomplete-item',
+
+        removeAutocompleteItem: function() {
+          this.fire('iron-signal', {
+            name: 'remove-autocomplete-item',
+            data: {
+              for: this.for,
+              item: this.item
+            }
+          });
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

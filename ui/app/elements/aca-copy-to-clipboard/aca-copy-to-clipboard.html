@@ -1,0 +1,49 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-copy-to-clipboard">
+  <style></style>
+
+  <template>
+    <paper-icon-button id="contentCopy"
+                       icon="content-copy"
+                       on-click="_copyToClipboard"></paper-icon-button>
+    <paper-tooltip for="contentCopy">[[title]]</paper-tooltip>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-copy-to-clipboard',
+        properties: {
+          dataText: {
+            type: String,
+            value: '',
+            notify: true
+          },
+          title: {
+            type: String,
+            value: 'Copy to Clipboard',
+            notify: true
+          }
+        },
+
+        _copyToClipboard: function() {
+          try {
+            var data = this.dataText;
+            clipboard.copy(data).then(function() {
+              console.info('copied ', data);
+              app.showToast('Copied to clipboard: {imageURL}', {imageURL: data});
+            }, function(error) {
+              console.error(error);
+              app.showToast('ERROR: Could not copy \'{url}\' to clipboard.', {url: data}, true);
+            });
+          } catch (e) {
+            app.showToast('ERROR: Could not copy data to clipboard.');
+          }
+        }
+      });
+    })();
+  </script>
+</dom-module>

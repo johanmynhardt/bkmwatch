@@ -1,0 +1,306 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-article-dialog">
+  <style>
+
+    :root {
+      --paper-tabs-selection-bar-color: #666;
+      --paper-tab-ink: #333;
+      --paper-tabs: {
+        color: #666;
+      }
+    }
+
+    .paper-dialog-0 > *:first-child {
+      margin-top: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    paper-dialog {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: 0;
+    }
+
+    paper-fab {
+      width: 15px;
+      height: 15px;
+      color: #fff;
+      border: 1px solid white;
+      background-color: #666;
+      opacity: 0.8;
+      z-index: 9;
+      margin: 0.3em;
+    }
+
+    #mediaList {
+      overflow: auto;
+      overflow-y: hidden;
+    }
+
+    #img {
+      margin: 0 0.3em 0.3em 0;
+    }
+
+    .tag {
+      border: 1px outset;
+      border-radius: 0.3em;
+      padding: 0.3em;
+      color: #fff;
+      background-color: #444;
+      display: inline-block;
+    }
+
+    div#fabs {
+      position: relative;
+      z-index: 100;
+      top: 45px;
+    }
+
+    div#image {
+      padding-top: 0;
+      top: 45px;
+      margin-top: -45px;
+    }
+
+  </style>
+
+  <template>
+
+    <iron-a11y-keys target="[[target]]" keys="esc" on-keys-pressed="_closeDialog"></iron-a11y-keys>
+
+    <iron-ajax id="metaAjax" url$="[[infoUrl]]" content-type="application/json"
+               method="post" handle-as="json"
+               last-response="{{_lookupResponse}}"
+               last-error="{{_lastError}}"
+               ></iron-ajax>
+
+    <paper-dialog id="detailsDialog" modal class="layout vertical flex">
+      <!-- HEADING + Close -->
+      <paper-toolbar>
+        <iron-icon icon="description"></iron-icon>
+        <paper-icon-button dialog-dismiss title="Close" icon="arrow-back"></paper-icon-button>
+        <span class="title">Viewing article: [[heading]]</span>
+      </paper-toolbar>
+
+      <div class="flex layout vertical">
+        <div>
+          <!-- Heading -->
+          <h1>[[heading]]</h1>
+          <h4 class="flex" style="text-align: right;">By [[author]] on [[publishDate]] in [[titleString]]</h4>
+          <!-- ByLine -->
+
+        </div>
+
+
+        <!-- MediaList -->
+        <div id="collapse">
+          <div class="layout horizontal" id="mediaList">
+            <template is="dom-repeat" items="[[images]]" as="image">
+              <div id="image">
+                <div id="fabs" class="layout horizontal" hidden$="{{_hideDownload()}}">
+                  <a href$="[[_irsDownload(image)]]" download>
+                    <paper-fab id="download" icon="file-download" title="Download"></paper-fab>
+                  </a>
+                </div>
+
+                <div style$="[[_imgThumbStyle(image)]]" id="img">
+                  <iron-image
+                      style$="[[_imgThumbStyle(image)]]"
+                      src$="[[_imgThumbUrl(image)]]"
+                      sizing="cover" preload fade>
+                  </iron-image>
+                </div>
+              </div>
+
+            </template>
+          </div>
+        </div>
+
+        <div id="tagCollapse">
+          <iron-icon icon="label" title="Tags"></iron-icon> tags:
+          <template is="dom-repeat" items="[[tags]]" as="tag">
+            <div class="tag">[[tag]]</div>
+          </template>
+        </div>
+
+        <h4>Content</h4>
+        <paper-dialog-scrollable class="flex">
+          <div id="htmlContent"><!-- [[content]] --></div>
+        </paper-dialog-scrollable>
+      </div>
+    </paper-dialog>
+  </template>
+
+  <script>
+
+    (function() {
+      Polymer({
+        is: 'aca-article-dialog',
+        properties: {
+          heading: {
+            type: String,
+            value: 'Heading not set'
+          },
+          item: {
+            type: Object,
+            value: undefined,
+            notify: true,
+            observer: 'itemChanged'
+          },
+          images: {
+            type: Array,
+            value: []
+          },
+          tags: {
+            type: Array,
+            value: []
+          },
+          _showOrHideMediaText: {
+            type: String,
+            value: 'Show'
+          },
+          _showOrHideTagsText: {
+            type: String,
+            value: 'Show'
+          },
+          _infoUrl: {
+            type: String,
+            value: ''
+          },
+          _lookupResponse: {
+            type: Object,
+            value: undefined
+          },
+          _lastError: {
+            type: Object,
+            value: undefined,
+            notify: true
+          }
+        },
+
+        displayArticle: function(newItem) {
+          console.log('displaying article: ', newItem);
+          this.item = newItem;
+          this.$.detailsDialog.open();
+        },
+
+        itemChanged: function(newValue) {
+          console.info('change detected: ', newValue);
+
+          //this._updateMetaData(newValue);
+
+          this.heading = S(newValue.article.label ? newValue.article.label
+                           : newValue.article.headlineSummary).stripTags().s;
+
+          this.author = S(newValue.article.author).isEmpty() ? 'Unknown Author'
+            : newValue.article.author;
+          this.publishDate = new Date(newValue.article.publishDate).toDateString();
+          this.titleString = _.isEmpty(newValue.metaData.titleName) ?
+              'Unknown Title' :
+              newValue.metaData.titleName;
+          this.$.htmlContent.innerHTML = newValue.article.articleHTML;
+
+          this.hasImages = imgutils.hasImages(newValue.article);
+          if (this.hasImages) {
+            var mediaItems = imgutils.mediaItems(newValue.article, 'Image');
+            var newImages = [];
+            mediaItems.forEach(function(mediaItem) {
+              var newImg = _.head(mediaItem.references);
+              if (newImg) {
+                newImages.push(newImg);
+              }
+            });
+            this.images = newImages;
+          } else {
+            this.images = [];
+          }
+
+          this.hasTags = _.isArray(newValue.article.tags) && newValue.article.tags.length > 0;
+          this.tags = this.hasTags ? newValue.article.tags : [];
+          console.info('hasTags: ', this.hasTags);
+        },
+
+        toggleMedia: function() {
+          console.log('toggle collapse: ', this.$.collapse);
+
+          this.$.collapse.toggle();
+
+          this._showOrHideMediaText = this.$.collapse.opened ? 'hide' : 'show';
+        },
+
+        toggleTags: function() {
+          this.$.tagCollapse.toggle();
+          this._showOrHideTagsText = this.$.tagCollapse.opened ? 'hide' : 'show';
+        },
+
+        _hideDownload: function() {
+          return app.config.standalone !== true;
+        },
+
+        _imgThumbStyle: function(image) {
+          return imgutils.computeThumbDims(image, 200, 'style');
+        },
+
+        _imgThumbUrl: function(image) {
+          return imgutils.irsThumb(
+            app.config,
+            imgutils.computeThumbDims(image, 200, 'src'),
+            image.imageURL
+          );
+        },
+
+        _irsDownload: function(image) {
+          return imgutils.irsDownload(app.config, image.imageURL);
+        },
+
+        _closeDialog: function() {
+          this.$.detailsDialog.close();
+        },
+
+        fromContentKey: function(contentKey) {
+          // populate fields from content lookup.
+
+          console.debug('populating article from contentKey: ', contentKey);
+
+          let config = {
+            contentKey: contentKey,
+            datasetKey: 'forsearch',
+            type: 'content'
+          };
+
+          this.infoUrl = app.multiValueUrl(app.bootstrap.baseLookupTemplate, config);
+
+          console.info('lodash infoUrl: ', this.infoUrl);
+
+          this.metaResponse = {meta: {data: 'Loading...'}};
+          this.$.metaAjax.generateRequest();
+
+          this.displayArticle({});
+        },
+
+        _updateMetaData: function(newArticle) {
+          console.info('newArticle: ', newArticle);
+
+          let config = {
+            contentKey: newArticle.metaData.contentKey,
+            datasetKey: 'forsearch',
+            type: 'content'
+          };
+
+          this.infoUrl = app.multiValueUrl(app.bootstrap.baseLookupTemplate, config);
+          console.info('underscore infoUrl: ', this.infoUrl);
+
+          this.metaResponse = {meta: {data: 'Loading...'}};
+          this.$.metaAjax.generateRequest();
+        }
+
+      });
+    })();
+  </script>
+
+</dom-module>

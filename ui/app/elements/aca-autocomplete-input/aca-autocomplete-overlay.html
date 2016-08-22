@@ -1,0 +1,91 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-autocomplete-overlay">
+
+  <style>
+    .title {
+      margin-top: 0.2em;
+      padding: 0.5em;
+      font-weight: bold;
+    }
+
+    #listbox {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+  </style>
+
+  <template>
+
+    <paper-material elevation="5">
+      <paper-listbox id="listbox">
+        <template is="dom-repeat" items="[[items]]">
+          <paper-item title$="id=[[item.id]]">[[item.label]]</paper-item>
+        </template>
+      </paper-listbox>
+    </paper-material>
+  </template>
+
+
+  <script>
+  (function() {
+    'use strict';
+
+    Polymer({
+      is: 'aca-autocomplete-overlay',
+
+      properties: {
+        items: {
+          type: Array,
+          value: []
+        },
+        input: {
+          type: Object,
+          value: undefined
+        }
+      },
+
+      observers: [
+        'itemsChange(items)'
+      ],
+
+      behaviors: [
+        Polymer.IronOverlayBehavior
+      ],
+
+      listeners: {
+        'iron-select': 'onIronSelect'
+      },
+
+      onIronSelect: function() {
+
+        var selection = this.items[this.$.listbox.selected];
+
+        console.log('onIronSelect...:', selection);
+
+        this.$.listbox.selected = undefined;
+
+        this.fire('iron-signal', {
+          name: 'add-autocomplete-item',
+          data: {
+            for: this.for,
+            item: selection
+          }
+        });
+
+        this.close();
+      },
+
+      itemsChange: function(newValues) {
+        if (this.open && _.isEmpty(newValues)) {
+          this.close();
+        } else if (this.close && !_.isEmpty(newValues)) {
+          this.open();
+        }
+      },
+
+    });
+  })();
+  </script>
+
+</dom-module>

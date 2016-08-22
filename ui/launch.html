@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Launch Content Archive</title>
+    <style>
+
+      html, body {
+        font-family: sans;
+        background-color: #333;
+        color: white;
+      }
+
+      div.form, input {
+        border: 0px;
+        background-color: #333;
+        color: white;
+        padding: 3px;
+      }
+    </style>
+
+    <script src="bower_components/clipboard/dist/clipboard.min.js"></script>
+
+  </head>
+  <body>
+
+    <div class="form">
+      <!--   FORM   -->
+      <h2>
+        Development Launcher
+      </h2>
+      <ul>
+        <li>
+          <input id="domain" placeholder="http://localhost:5000">
+          <label for="domain">Content Archive UI Host</label>
+        </li>
+        <li>
+          <input id="support" placeholder="http://localhost:8080/ashes-support">
+          <label for="support">Support Backend</label>
+        </li>
+        <li>
+          <input id="tenantKey" placeholder="sbp">
+          <label for="tenantKey">Tenant Key</label>
+        </li>
+        <li>
+          <input id="appId" placeholder="8">
+          <label for="appId">App Id</label>
+        </li>
+        <li>
+          <input id="irsBase" placeholder="http://localhost:8090/image">
+          <label for="irsBase">Image Resize Server</label>
+        </li>
+      </ul>
+
+      <button onclick="showSelector();">Launch</button>
+    </div>
+
+    <!-- Trigger -->
+    <button class="btn" data-clipboard-text="Just because you can doesn't mean you should — clipboard.js">
+      Copy to clipboard
+    </button>
+
+    <div>
+      <h3>Selected:</h3>
+      <code >
+        <pre id="selected"></pre>
+      </code>
+    </div>
+
+    <script>
+      // DEFAULTS
+      var defaultAppDomain = 'http://localhost:5000';
+      var defaultSupport = 'http://az-baobab-test-support.elasticbeanstalk.com';
+      var defaultTenantKey = 'az';
+      var defaultAppId = '8';
+      var defaultIrsBase = 'http://test-irs.afrozaar.com/image';
+      var searchFrag = '/#!/search';
+      var cl = null;
+      var popupUrl = null;
+
+
+      function getValueOr(elementId, orValue) {
+        return document.querySelector('#'+elementId).value ? document.querySelector('#'+elementId).value : orValue;
+      }
+
+      function showSelector() {
+        popupUrl = getValueOr('domain', defaultAppDomain) + searchFrag;
+
+        cl = window.open(popupUrl, 'popupWindow', "chrome=yes,titlebar=no,menubar=no,location=no,resizable=no,scrollbars=no,status=no,width=600,height=700,centerscreen");
+      }
+
+      function handleConfigRequest() {
+        var responseMessage = JSON.stringify({
+          config: {
+            searchBase: getValueOr('support', defaultSupport),
+            apiL: 9,
+            tk: getValueOr('tenantKey', defaultTenantKey),
+            appId: getValueOr('appId', defaultAppId),
+            irsBase: getValueOr('irsBase', defaultIrsBase)
+          }
+        });
+
+        if (cl) {
+          console.log('request for config. Sending %o to window %o', responseMessage, cl);
+          cl.postMessage(responseMessage, popupUrl);
+        } else {
+          console.error('Can not send configuration data. No client window.');
+        }
+      }
+
+      function handleSelected(request) {
+        /* {request: 'selected', items: ['url1', 'url2']}
+        * */
+
+        if (request.items) {
+          console.info('selected images: ', request.items);
+          document.querySelector('#selected').textContent = JSON.stringify(request.items, null, ' ');
+          cl.close();
+        }
+      }
+
+      window.addEventListener('message', function(event) {
+        if (event.data) {
+          var req = JSON.parse(event.data);
+          if (req.request == 'config') {
+            handleConfigRequest();
+          } else if (req.request == 'selected') {
+            handleSelected(req);
+          } else {
+            console.warn('Unsupported request: %s', event.data);
+          }
+        }
+      });
+
+      var clipboard = new Clipboard('.btn');
+      clipboard.on('success', function(e) {
+        console.info(e);
+      });
+      clipboard.on('error', function(e) {
+        console.error(e);
+      });
+
+    </script>
+
+  </body>
+</html>

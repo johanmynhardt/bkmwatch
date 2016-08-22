@@ -1,0 +1,240 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-upload-item">
+  <template>
+
+    <style>
+      #item-container {
+        margin-bottom: 0.5em;
+        width: 400px;
+      }
+
+      #uploadProgress {
+        width: inherit;
+      }
+
+      paper-button.default {
+        color: white;
+        background-color: #0064ad;
+      }
+
+      paper-tooltip hr {
+        border-top: 1px;
+      }
+
+      div.overflow {
+        white-space: nowrap;
+        max-height: 1.2em;
+        max-width: 230px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    </style>
+
+    <paper-card id="item-container" class="">
+      <div class="card-content" title="[[file.name]]">
+
+        <div class="layout horizontal">
+          <div class="flex">
+              <div>Size: [[file.size]] bytes</div>
+              <div>MIME: [[file.type]]</div>
+
+            <p></p>
+
+            <div hidden="[[uploaded]]">Uploading: [[progress]]%</div>
+
+            <div hidden$="[[!uploaded]]">
+              <div>
+                <iron-icon icon="done"></iron-icon> Complete
+              </div>
+              <div title="[[filePath]]" class="overflow">Temp path: [[filePath]] </div>
+            </div>
+
+          </div>
+          <iron-image id="img" src$="[[thumbData]]" style="width:150px; height:150px;" sizing="contain"></iron-image>
+        </div>
+
+        <paper-progress id="uploadProgress" class=" horizontal flex" value="[[progress]]" hidden$="[[uploaded]]"></paper-progress>
+      </div>
+
+      <div class="card-actions">
+        <paper-icon-button id="caption"
+                           icon="communication:chat-bubble"
+                           on-click="showCaptionDialog">
+        </paper-icon-button>
+        <paper-tooltip for="caption">
+          <strong>Caption</strong>
+          <div hidden$="[[!file.caption]]">
+            <hr/>
+            <em>[[file.caption]]</em>
+          </div>
+        </paper-tooltip>
+
+        <paper-icon-button id="launchExternal" hidden$="[[!publicLocation]]" icon="launch" on-click="launchExternal"></paper-icon-button>
+        <paper-tooltip for="launchExternal">View media in a new tab/window.</paper-tooltip>
+      </div>
+    </paper-card>
+
+    <paper-dialog id="captionDialog">
+      <h2>Caption</h2>
+
+      <paper-input value="{{newCaption}}" label="Caption">
+        <paper-icon-button id="clearIcon" icon="clear" noink suffix hidden$="[[!file.caption]]" on-click="clearCaption"></paper-icon-button>
+      </paper-input>
+      <paper-tooltip for="clearIcon" position="top">Clear caption</paper-tooltip>
+
+      <div class="buttons">
+        <paper-button dialog-dismiss noink>Cancel</paper-button>
+        <paper-button dialog-confirm raised class="default">Update</paper-button>
+      </div>
+    </paper-dialog>
+
+  </template>
+
+  <script>
+
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-upload-item',
+
+        properties: {
+          file: {
+            type: File,
+            observer: 'fileChanged'
+          },
+
+          thumbData: {
+            type: String,
+            value: undefined
+          },
+
+          progress: {
+            type: Number,
+            value: 0
+          },
+
+          uploaded: {
+            type: Boolean,
+            value: false
+          },
+
+          filePath: {
+            type: String,
+            value: undefined
+          },
+
+          publicLocation: {
+            type: String,
+            value: null
+          },
+
+          newCaption: {
+            type: String,
+            value: undefined
+          }
+        },
+
+        listeners: {
+          'iron-overlay-closed': 'dialogClosed'
+        },
+
+        get calcEndpoint() {
+          let templateUrl = app.bootstrap.withPath(app.bootstrap.media);
+          return app.urlFromConfig(app.config, templateUrl);
+        },
+
+        setImgSrc: function(value) {
+          this.$.img.setAttribute('src', value);
+        },
+
+        fileChanged: function(newFile) {
+          if (/^image\/.*/.test(newFile.type)) {
+            let thumbReader = new FileReader();
+            thumbReader.onload = function(e) {
+              this.setImgSrc(e.target.result);
+            }.bind(this);
+            thumbReader.readAsDataURL(newFile);
+          } else if (/^audio\/.*/.test(newFile.type)) {
+            this.setImgSrc('images/sonata.png');
+          } else if (/^video\/.*/.test(newFile.type)) {
+            this.setImgSrc('images/totem2.png');
+          } else {
+            this.setImgSrc('images/help-contents2.png');
+          }
+
+          this.registerUpload(newFile);
+        },
+
+        registerUpload: function(file) {
+          console.info('Instantiating fileUpload: ', file);
+
+          let data = new FormData();
+          data.append('file', file);
+
+          let updateProgress = function(newValue) {
+            this.setProgress(newValue);
+          }.bind(this);
+
+          let uploadComplete = function(data) {
+            console.info('updating completed data: ', data);
+            this.publicLocation = data.entity.publicLocation;
+            this.filePath = data.entity.filePath;
+            this.fire('iron-signal', {
+              name: 'upload-complete',
+              data: {
+                entity: data.entity,
+                file: file
+              },
+            });
+          }.bind(this);
+
+          let config = {
+            progress: function(e) {
+              updateProgress(Math.round(e.loaded / e.total * 100));
+            },
+            withCredentials: true
+          };
+
+          axios.post(this.calcEndpoint, data, config)
+              .then(function(res) {
+                console.debug('upload response: ', res);
+                if (res.status === 200) {
+                  uploadComplete(res.data);
+                }
+                this.uploaded = true;
+              }.bind(this))
+              .catch(function(err) {
+                app.showToast('Upload failed: {err}. See console for more info.', {err: err}, true);
+              });
+        },
+
+        setProgress: function(progressValue) {
+          this.progress = progressValue;
+        },
+
+        showCaptionDialog: function() {
+          this.set('newCaption', this.file.caption);
+          this.$.captionDialog.open();
+        },
+
+        dialogClosed: function(e) {
+          if (e.detail.confirmed) {
+            //this.set('caption', this.newCaption);
+            this.set('file.caption', this.newCaption);
+          }
+        },
+
+        clearCaption: function() {
+          this.set('newCaption', null);
+        },
+
+        launchExternal: function() {
+          window.open(this.publicLocation);
+        }
+
+      });
+    })();
+  </script>
+</dom-module>

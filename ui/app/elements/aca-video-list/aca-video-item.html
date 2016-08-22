@@ -1,0 +1,80 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-video-item">
+  <template>
+    <style>
+      #caption {
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      paper-card {
+        margin-bottom: 0.2em;
+      }
+    </style>
+    <paper-card id="videoCard">
+      <div class="card-content">
+        <div>
+          <video id="videoElement" width="320" height="180" title="[[video.caption]]">
+            <source src$="[[video.references.0.url]]">
+            Your browser does not support the html5 video tag.
+          </video>
+        </div>
+        <div id="caption">
+          [[_caption(video)]]
+          <paper-tooltip for="caption">[[_caption(video)]]</paper-tooltip>
+        </div>
+      </div>
+      <div class="card-actions horizontal layout flex center">
+        <div>[[_title(video)]]</div>
+        <span class="flex"></span>
+        <paper-icon-button icon="av:play-circle-outline" on-click="_showVideoDetails"></paper-icon-button>
+      </div>
+    </paper-card>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-video-item',
+
+        properties: {
+          video: {
+            type: Object,
+            value: undefined
+          }
+        },
+
+        ready: function() {
+          this.videoElement.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+          });
+        },
+
+        get videoElement() {
+          return Polymer.dom(this.$.videoCard).querySelector('video');
+        },
+
+        _caption: function(video) {
+          return !_.isEmpty(video.caption) ? video.caption : String.fromCharCode(160);
+        },
+
+        _showVideoDetails: function() {
+          this.fire('iron-signal', {name: 'show-video-details', data: this.video});
+        },
+
+        _title: function(item) {
+          if (_.isObject(item)) {
+            return S(item.metaData.titleName).isEmpty() ? 'Unknown Title' : item.metaData.titleName;
+          } else {
+            return 'Unknown Title';
+          }
+        },
+      });
+    })();
+  </script>
+</dom-module>

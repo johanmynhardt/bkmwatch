@@ -1,0 +1,145 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-search-typeselector">
+
+  <style>
+    :host {
+      display: flex;
+      margin-bottom: 1em;
+    }
+  </style>
+
+  <template>
+
+    <iron-signals on-iron-signal-config-updated="_configUpdated"></iron-signals>
+
+    <style>
+      paper-button[raised] {
+        border-bottom: 2px solid #727272;
+        box-shadow: none;
+      }
+    </style>
+
+      <div id="itemContainer">
+        <template is="dom-repeat" items="[[types]]" as="type">
+          <paper-button type$="{{type.type}}" noink on-click="_changeSelection">
+            <iron-icon icon="{{type.icon}}"></iron-icon>
+            {{type.label}}
+          </paper-button>
+        </template>
+        <content></content>
+      </div>
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'aca-search-typeselector',
+        properties: {
+          selected: {
+            type: String,
+            value: undefined,
+            notify: true
+          },
+          types: {
+            type: Array,
+            value: []
+          }
+        },
+
+        ready: function() {
+          this._configUpdated();
+        },
+
+        _availableTypes: function() {
+          // let's future-proof this thing!
+          const availableTypes = [
+            {
+              type: 'type-image',
+              icon: 'image:camera',
+              label: 'Image'
+            },
+            {
+              type: 'type-video',
+              icon: 'av:play-circle-outline',
+              label: 'Video'
+            },
+            {
+              type: 'type-audio',
+              icon: 'av:music-video',
+              label: 'Audio'
+            },
+            {
+              type: 'type-article',
+              icon: 'description',
+              label: 'Article'
+            }
+          ];
+
+          const allowed = ['type-image', 'type-article', 'type-video'];
+
+          const allowedFilter = types => current => _.includes(types, current.type);
+
+          return _.chain(availableTypes)
+              .filter(allowedFilter(allowed))
+              .value();
+        },
+
+        _changeSelection: function(event) {
+          let target = event.target;
+          let type = target.attributes.type;
+          console.info('change: ', type);
+
+          if (type) {
+            this.selected = type.value;
+          }
+          _.each(target.parentNode.children, (item) => item.raised = _.isEqual(item, target));
+        },
+
+        _configUpdated: function(event) {
+          console.log('_configUpdated: ', event);
+
+          const typeMap = {
+            'type-media': [
+              'type-image',
+              'type-audio',
+              'type-video'
+            ],
+            'type-audio': ['type-audio'],
+            'type-image': ['type-image'],
+            'type-video': ['type-video'],
+            'type-article': ['type-article']
+          };
+
+          if (_.hasIn(app, 'config.limitToType')) {
+            let types = app.config.limitToType.split(',');
+            if (_.includes(types, 'type-media')) { // use all media types instead
+              types = typeMap['type-media'];
+            }
+
+            this.types = _.filter(this._availableTypes(), function(availableType) {
+              return _.some(types, function(x) {
+                return _.isEqual(x, availableType.type);
+              });
+            });
+          } else {
+            this.types = this._availableTypes();
+          }
+
+          if (_.map(this.types, 'type').length === 0) {
+            console.error('types not expected to be empty!');
+          }
+
+          // Set first button raised
+          Polymer.dom.flush();
+          let firstButton = _.first(this.$.itemContainer.querySelectorAll('paper-button'));
+          if (firstButton) {
+            Polymer.dom(firstButton).setAttribute('raised');
+            this.selected = firstButton.attributes.type.value;
+          }
+
+        }
+      });
+    })();
+  </script>
+</dom-module>

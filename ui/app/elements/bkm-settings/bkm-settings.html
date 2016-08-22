@@ -1,0 +1,29 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="bkm-settings">
+  <template>
+    <paper-button raised on-click="updateAlerts"><iron-icon icon="system-update-alt"></iron-icon>&nbsp;Update</paper-button>
+  </template>
+
+  <script>
+    class BkmSettings {
+      beforeRegister() {
+        this.is = 'bkm-settings';
+
+        this.properties = {
+
+        }
+      }
+
+      updateAlerts() {
+        let xhr = new XMLHttpRequest();
+        xhr.addEventListener('error', (err) => { console.error('error: ', err);});
+        xhr.addEventListener('load', (resp) => { console.info('updated!'); });
+        xhr.open('GET', 'record/alerts?update=true');
+        xhr.send(null);
+      }
+    }
+
+    Polymer(BkmSettings)
+  </script>
+</dom-module>

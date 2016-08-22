@@ -1,0 +1,92 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-video-dialog.html">
+<link rel="import" href="aca-video-item.html">
+
+<dom-module id="aca-video-list">
+  <template>
+
+    <style></style>
+
+    <iron-signals on-iron-signal-toggle-image="toggleItem"
+                  on-iron-signal-show-video-details="_showVideoDetails"
+                  on-iron-signal-search-loading-changed="searchLoadingChanged">
+    </iron-signals>
+
+    <div class="horizontal">
+      <template id="articleImages" is="dom-repeat" items="[[_videos]]" as="video">
+        <!--<aca-video-item model-item="[[video]]" selected="[[video.selected]]" item="[[getMediaItemReferenceAt(video, 0)]]"></aca-video-item>-->
+        <aca-video-item video="[[video]]"></aca-video-item>
+      </template>
+    </div>
+
+    <aca-video-dialog id="videoDialog"></aca-video-dialog>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-video-list',
+
+        properties: {
+          articles: {
+            type: Array,
+            notify: true
+          }
+        },
+
+        stringify: function(object) {
+          return JSON.stringify(object);
+        },
+
+        _filterType: function(article, mediaType) {
+
+          if (article.mediaItems === undefined) {
+            return;
+          }
+
+          // .mediaItems
+          console.log('mediaItems: ', article.mediaItems.length);
+
+          var forCollection = _.curry(function(bucket, item) {
+            if (_.isEqual(item.mediaType, mediaType)) {
+              item.metaData = article.metaData;
+              var vidRef = imgutils.firstMediaItemReference(item);
+
+              if (vidRef && vidRef.url && vidRef.url.length > 0) {
+                bucket.push(item);
+              } else {
+                console.warn('no url in vidRef: ', vidRef);
+              }
+            }
+          }.bind(this));
+
+          var videoItems = [];
+          article.mediaItems.forEach(forCollection(videoItems));
+          return videoItems;
+        },
+
+        searchLoadingChanged: function(e) {
+          if (!e.detail.loading) {
+            this.set('_videos', this._videosFromArticles(this.articles));
+          }
+        },
+
+        _showVideoDetails: function(e) {
+          this.$.videoDialog.show(e.detail);
+        },
+
+        _videosFromArticles: function(articles) {
+          var allVideos = [];
+          articles.forEach(function(article) {
+            allVideos = _.concat(allVideos, this._filterType(article, 'Video'));
+          }.bind(this));
+          return allVideos;
+        }
+      });
+
+    })();
+  </script>
+
+</dom-module>

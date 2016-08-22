@@ -1,0 +1,160 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-meta-dialog-overview-data">
+
+  <style>
+
+    :root {
+      min-width: 15em;
+      max-width: 20em;
+    }
+
+    paper-dialog-scrollable {
+      padding-top: 1em;
+      width: 300px;
+    }
+
+    .wide {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 20em;
+    }
+  </style>
+
+  <template>
+    <style include="shared-styles"></style>
+
+    <iron-signals on-iron-signal-meta-data-received="_metaDataReceived"></iron-signals>
+
+    <div id="image-data" class="layout vertical flex">
+      <div><span class="field-label">Caption:</span>[[item.caption]]</div>
+      <div><span class="field-label">Media Type:</span>[[item.mediaType]]</div>
+      <div><span class="field-label">MIME Type:</span>[[_getProp(item.references, 0, 'mimeType')]]</div>
+      <div><span class="field-label">Width:</span>[[_getProp(item.references, 0, 'width')]]</div>
+      <div><span class="field-label">Height:</span>[[_getProp(item.references, 0, 'height')]]</div>
+      <div class="wide" title="[[_getProp(item.references, 0, 'imageSource')]]">
+        <span class="field-label">Source:</span>
+        [[_getProp(item.references, 0, 'imageSource')]]
+      </div>
+      <paper-material hidden$="[[_copyrightHidden]]" elevation="1">
+        <h4>Copyright</h4>
+        <p>[[copyrightInfo]]</p>
+      </paper-material>
+    </div>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-meta-dialog-overview-data',
+
+        properties: {
+          item: {
+            type: Object,
+            value: undefined
+          },
+          bounds: {
+            type: String,
+            value: ''
+          },
+          _copyrightHidden: {
+            type: Boolean,
+            value: true
+          }
+        },
+
+        observers: ['portraitChanged(portrait)'],
+
+        portraitChanged: function(isPortrait) {
+          //console.log('portraitChanged: ', isPortrait);
+          this.portrait = isPortrait;
+          this.bounds = isPortrait ? this._boundStyle(200, 600) : this._boundStyle(600, 200);
+        },
+
+        _boundStyle: function(val1, val2) {
+          return _.template('width:{w}px; height:{h}px;')({w: val1, h: val2});
+        },
+
+        _getProp: function(list, idx, prop) {
+          return list[idx][prop];
+        },
+
+        containsAndNot: _.curry(function(toMatch, toExclude, key) {
+          /**
+           * A key is an exclusion key if the key contains the exclusion key
+           **/
+          const isExclusionKey = currentKey => exclusionKey => _.includes(currentKey, exclusionKey);
+
+          let currentKey = _.first(_.map((_.isString(key) ? [key] : key), _.toLower));
+          let toMatchArr = _.isString(toMatch) ? [toMatch] : toMatch;
+
+          return _.some(toMatchArr, (toMatch) =>  _.includes(currentKey, toMatch) && !_.some(toExclude, isExclusionKey(currentKey)));
+        }),
+
+        _metaDataReceived: function(metaDataEvent) {
+          let metaData = metaDataEvent.detail;
+
+          const includeKeys = ['copy', 'by-line', 'credit', 'artist', 'creator'];
+          const excludeKeys = ['profile', 'flag', 'tool'];
+
+          /**
+           *  The basic structure for our operations (filter/map):
+           *      {profile: {profileKey: value, ...}}
+           */
+          const toProfileTuple = (values, profile) => {
+            let data = {};
+            data[profile] = values;
+            return data;
+          };
+
+          const profileKeyFromTuple = (profileTuple) => _.first(_.keys(profileTuple));
+
+          const profileFromTuple = (profileTuple) =>  profileTuple[profileKeyFromTuple(profileTuple)];
+
+          const validKeysFromTuple = function(profileTuple) {
+            return _.chain(_.keys(profileFromTuple(profileTuple)))
+                .filter(this.containsAndNot(includeKeys, excludeKeys));
+          }.bind(this);
+
+          const profileContainsValidKeys = (profileTuple) => {
+            let profileKey = profileKeyFromTuple(profileTuple);
+            console.debug('filtering profile: ', profileKey);
+            return !validKeysFromTuple(profileTuple).isEmpty().value();
+          };
+
+          // curry so we can pass metadata and return a function to operate on keys.
+          const hydrateKeysFromMetaData = metaData => profileKeys => {
+            let profile = profileKeyFromTuple(profileKeys);
+            return _.chain(profileKeys[profile]).map(key => metaData[profile][key]).value();
+          };
+
+          const hydrateValidKeys = (profileTuple) => {
+            let keys = validKeysFromTuple(profileTuple).value();
+            return toProfileTuple(keys, profileKeyFromTuple(profileTuple));
+          };
+
+          let copyrightValues = _.chain(metaData)
+              .map(toProfileTuple)
+              .filter(profileContainsValidKeys)
+              .map(hydrateValidKeys)
+              .map(hydrateKeysFromMetaData(metaData))
+              .flatten()
+              .uniq()
+              .value();
+
+          if (_.isEmpty(copyrightValues)) {
+            this.copyrightInfo = '';
+            this._copyrightHidden = true;
+          } else {
+            this.copyrightInfo = _.uniq(copyrightValues).reduce((k, v) => k + ', ' + v);
+            this._copyrightHidden = false;
+          }
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

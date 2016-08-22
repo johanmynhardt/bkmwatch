@@ -1,0 +1,382 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-video-dialog">
+  <style>
+    .paper-dialog-0 > *:first-child {
+      margin-top: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    paper-dialog, aca-video-dialog {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      margin: 0;
+    }
+
+    .topAlign {
+      vertical-align: top;
+    }
+
+    #videoElement {
+      margin-right: 1em;
+    }
+
+    .dataRow {
+      border-bottom: 1px solid #eee;
+      border-radius: 0.5em;
+    }
+
+    .videoWidth {
+      max-width: 640px;
+    }
+
+    .capitalize {
+      text-transform: capitalize;
+    }
+
+    #videoAndCaption {
+      display: inline-block;
+      max-width: 640px;
+      /*border: 1px solid black;*/
+    }
+  </style>
+
+  <template>
+
+    <iron-ajax id="metaAjax"
+               url$="[[infoUrl]]"
+               content-type="application/json"
+               method="post"
+               handle-as="json"
+               last-response="{{_lookupResponse}}"
+               last-error="{{_lastError}}"
+    ></iron-ajax>
+
+    <paper-dialog id="detailsDialog" class="layout vertical flex">
+      <paper-toolbar>
+        <iron-icon icon="av:play-circle-outline"></iron-icon>
+        <paper-icon-button icon="arrow-back" on-click="_stopAndExit"></paper-icon-button>
+        <span class="title">[[_caption(video)]]</span>
+        <!--Fullscreen is buggy. Very sad, this was working well, but something broke it. -->
+        <!--<paper-icon-button icon="fullscreen" on-click="_fullscreen"></paper-icon-button>-->
+        <aca-copy-to-clipboard data-text="[[video.references.0.url]]"></aca-copy-to-clipboard>
+        <aca-file-download-link target-location="[[video.references.0.url]]"></aca-file-download-link>
+      </paper-toolbar>
+
+      <!--<paper-tabs selected="{{selectedTab}}">-->
+        <!--<paper-tab>x</paper-tab>-->
+        <!--<paper-tab>y</paper-tab>-->
+        <!--<paper-tab>z</paper-tab>-->
+      <!--</paper-tabs>-->
+
+      <paper-dialog-scrollable class="layout vertical flex">
+
+        <iron-pages selected="[[selectedTab]]">
+          <div id="videoContainer">
+            <div id="videoAndCaption">
+              <video id="videoElement" width="640" height="360" title$="[[_caption(video)]]">
+                <source src$="[[video.references.0.url]]">
+                Your browser does not support the html5 video tag.
+              </video>
+              <div class="layout horizontal flex">
+                <span class="flex"></span>
+                <paper-icon-button id="playPauseButton" icon="av:pause-circle-outline" on-click="_togglePlay"></paper-icon-button>
+                <span class="flex"></span>
+              </div>
+              <paper-card class="topAlign" elevation="0">
+                <div class="card-content">
+                  <h3>Caption</h3>
+
+                  <div class="dataRow" hidden$="[[!video.caption]]">
+                    [[video.caption]]
+                  </div>
+
+                  <div class="dataRow videoWidth" hidden$="[[video.caption]]">
+                    <em>No caption available.</em>
+                  </div>
+                </div>
+              </paper-card>
+            </div>
+
+            <!--USAGE -->
+            <paper-card class="topAlign videoWidth" elevation="0">
+              <div class="card-content">
+                <h3>Usage</h3>
+
+                <table>
+                  <template is="dom-repeat" items="[[_usageTuples]]">
+                    <tr >
+                      <td class="dataRow capitalize">[[item.0]]</td>
+                      <td class="dataRow">[[item.1]]</td>
+                    </tr>
+                  </template>
+
+                </table>
+              </div>
+            </paper-card>
+
+
+
+            <!--<paper-card class="topAlign" elevation="0">-->
+              <!--<div class="card-content">-->
+                <!--<h3>Reference data</h3>-->
+
+                <!--<table>-->
+                  <!--<template is="dom-repeat" items="[[_map(video.references.0)]]">-->
+                    <!--<tr >-->
+                      <!--<td class="dataRow capitalize">[[item.0]]</td>-->
+                      <!--<td class="dataRow">[[item.1]]</td>-->
+                    <!--</tr>-->
+                  <!--</template>-->
+
+                <!--</table>-->
+
+              <!--</div>-->
+            <!--</paper-card>-->
+
+          </div>
+
+          <div> </div>
+
+          <div> </div>
+        </iron-pages>
+
+      </paper-dialog-scrollable>
+      <!--<div id="bottomContainer"></div>-->
+    </paper-dialog>
+
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'aca-video-dialog',
+
+        properties: {
+
+          auto: {
+            type: Boolean,
+            value: false
+          },
+
+          video: {
+            type: Object,
+            value: undefined
+          },
+
+          selectedTab: {
+            type: Number,
+            value: 0
+          },
+
+          _usageTuples: {
+            type: Array,
+            value: []
+          },
+
+          infoUrl: {
+            type: String,
+            value: undefined
+          },
+
+          _lookupResponse: {
+            type: Object,
+            value: undefined,
+            observer: '_lookupResponseChanged'
+          },
+
+          _lastError: {
+            type: Object,
+            value: null,
+            observer: '_lastErrorChanged'
+          }
+        },
+
+        ready: function() {
+          this.videoElement.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+          });
+        },
+
+        show: function(video) {
+          this.set('video', video);
+          this._updateInfoUrl(video);
+
+          this.$.detailsDialog.fit();
+          this.$.detailsDialog.open();
+          this.videoElement.load();
+          if (this.auto) {
+            this._togglePlay();
+          } else {
+            this._updatePlayState();
+          }
+        },
+
+        get videoElement() {
+          var videoElement = Polymer.dom(this.$.detailsDialog).querySelector('video');
+          if (!videoElement) {
+            console.error('OH NO! no videoElement found!');
+          }
+          return videoElement;
+        },
+
+        _caption: function(video) {
+          return (_.has(video, 'caption') && !_.isEmpty(video.caption)) ? video.caption :
+              '(Video without caption)';
+        },
+
+        _fullscreen: function() {
+          if (this.videoElement.webkitRequestFullscreen) {
+            this.videoElement.webkitRequestFullscreen();
+          }
+          if (this.videoElement.mozRequestFullScreen) {
+            this.videoElement.mozRequestFullScreen();
+          }
+          if (this.videoElement.requestFullscreen) {
+            this.videoElement.requestFullscreen();
+          }
+        },
+
+        _mapForUsage: function(object) {
+
+          // TODO: Need to include author/headline/other info available as per image usage dialog.
+
+          var keys = [
+            //'contentKey',
+            //'editionDate',
+            //'editionId',
+            'sections',
+            //'tenantKey',
+            //'titleId',
+            //'titleKey',
+            'titleName',
+            'author',
+            'geoPoint',
+            'headlineFull',
+            'headlineSummary',
+            'label',
+            'tags',
+            'articleDate'
+          ];
+
+          var filterByKey = _.curry(function(keys, pair) {
+            return _.includes(keys, pair[0]);
+          });
+
+          var filterNonEmpty = function(pair) {
+            return !(_.isUndefined(pair[1]) || _.isNull(pair[1]) || _.isEmpty(pair[1]));
+          };
+
+          var transformIfArrayTupleValue = function(pair) {
+            if (pair[0] === 'sections' && _.isArray(pair[1])) {
+              pair[1] = _.chain(pair[1])
+                  .map('sectionName').join(', ')
+                  .value();
+            }
+            return pair;
+          };
+
+          return _.chain(object)
+              .toPairs()
+              .filter(filterNonEmpty)
+              .filter(filterByKey(keys))
+              .map(transformIfArrayTupleValue)
+              .value();
+        },
+
+        _map: function(object) {
+
+          var transformIfArrayTupleValue = function(pair) {
+            if (pair[0] === 'sections' && _.isArray(pair[1])) {
+              pair[1] = _.chain(pair[1])
+                  .map('sectionName').join(', ')
+                  .value();
+            }
+            return pair;
+          };
+
+          return _.chain(object)
+              .toPairs()
+              .map(transformIfArrayTupleValue)
+              .value();
+        },
+
+        _stopAndExit: function(e) {
+          console.info('stopAndExit: ', e);
+          if (this.videoElement) {
+            console.info('stopAndExit: Pausing');
+            this.videoElement.pause();
+          }
+          console.info('stopAndExit: close().');
+          this.$.detailsDialog.close();
+        },
+
+        _togglePlay: function() {
+          if (this.videoElement.paused) {
+            this.videoElement.play();
+          } else {
+            this.videoElement.pause();
+          }
+          this._updatePlayState();
+        },
+
+        _updatePlayState: function() {
+          var iconStyle = this.videoElement.paused ?
+              'av:play-circle-outline' :
+              'av:pause-circle-outline';
+
+          Polymer.dom(this.$.playPauseButton).setAttribute('icon', iconStyle);
+        },
+
+        /* Request-related (info url) */
+        _updateInfoUrl: function(video) {
+          var queryParameters = {
+            contentKey: video.metaData.contentKey,
+            datasetKey: 'forsearch',
+            type: 'content'
+          };
+
+          this.set('infoUrl', app.multiValueUrl(app.bootstrap.baseLookupTemplate, queryParameters));
+          this.$.metaAjax.generateRequest();
+        },
+
+        _lookupResponseChanged: function(lookupResponse) {
+          console.info('received lookupResponse: ', lookupResponse);
+
+          var copyKeys = [
+            //'abstractSummary',
+            'author',
+            'geoPoint',
+            'headlineFull',
+            'headlineSummary',
+            'label',
+            'tags',
+            'articleDate'
+          ];
+
+          // response.content[0].article.*
+          var article = lookupResponse.content[0].article;
+
+          _.each(_.keys(article), function(key) {
+            if (_.includes(copyKeys, key)) {
+              console.info('adding article key to metaData: ', key);
+              this.video.metaData[key] = article[key];
+            }
+          }.bind(this));
+
+          this.set('_usageTuples', this._mapForUsage(this.video.metaData));
+        },
+
+        _lastErrorChanged: function(lastError) {
+          console.error('lastError doing lookup: ', lastError);
+          app.showToast('There was an error during lookup. See console for more info.', '', true);
+        }
+      });
+    })();
+  </script>
+</dom-module>

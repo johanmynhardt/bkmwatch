@@ -1,0 +1,66 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-search-article-parameters">
+  <style></style>
+
+  <template>
+
+<!--     <iron-ajax>
+    </iron-ajax> -->
+
+    <paper-dropdown-menu id="titleSelector" label="Title" selected-item="{{selected}}">
+      <paper-listbox id="listbox" class="dropdown-content" attr-for-selected="data" >
+        <paper-item data="all">None Selected (All)</paper-item>
+        <template is="dom-repeat" items="[[titles]]">
+          <paper-item data="{{item.id}}">[[item.id]]: [[item.value]] <sub>(TODO more info)</sub></paper-item>
+        </template>
+      </paper-listbox>
+    </paper-dropdown-menu>
+  </template>
+
+  <script>
+
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-search-article-parameters',
+
+        properties: {
+          titles: {
+            type: Array,
+            value: []
+          },
+          selected: {
+            type: Object,
+            value: {id: 'all', value: 'None Selected (All)'},
+            notify: true,
+            observer: 'selectedChanged'
+          }
+        },
+
+        selectedChanged: function(newSelection) {
+          if (newSelection !== null && newSelection !== undefined) {
+            console.log('title selected: ', newSelection);
+            console.log('selected: ', this.$.listbox.selected);
+          }
+        },
+
+        showTitleSelector: function() {
+          console.log('display titleSelector');
+
+          var newTitles = [];
+
+          for (var i = 0; i < 20; i++) {
+            newTitles.push('item ' + i);
+          }
+
+          this.titles = newTitles;
+
+          this.$.titleSelector.open();
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

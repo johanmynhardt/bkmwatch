@@ -1,0 +1,140 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<script src="../bower_components/page/page.js"></script>
+<script>
+  window.addEventListener('WebComponentsReady', function() {
+
+    // We use Page.js for routing. This is a Micro
+    // client-side router inspired by the Express router
+    // More info: https://visionmedia.github.io/page.js/
+
+    // Removes end / from app.baseUrl which page.base requires for production
+    if (window.location.port === '') {  // if production
+      page.base(app.baseUrl.replace(/\/$/, ''));
+    }
+
+    // Middleware
+    function scrollToTop(ctx, next) {
+      app.scrollPageToTop();
+      next();
+    }
+
+    function closeDrawer(ctx, next) {
+      //app.closeDrawer();
+      next();
+    }
+
+    // Routes
+    page('*', scrollToTop, closeDrawer, function(ctx, next) {
+      next();
+    });
+
+    page('/', function() {
+      app.route = 'home';
+    });
+
+    page(app.baseUrl, function() {
+      app.route = 'home';
+    });
+
+    page('/settings', function(ctx) {
+      app.route = 'settings';
+    });
+
+    page('/search', function() {
+      app.route = 'search';
+    });
+
+    page('/browse', function() {
+      app.route = 'browse';
+      app.browse = {
+        page: 0,
+        perPage: 10
+      }
+    });
+
+    page('/browse/:page', function(ctx) {
+      app.route = 'browse';
+      app.params = ctx.params;
+      let qparams = {};
+      app.parseParams(ctx.querystring).map((tuple) => qparams[tuple[0]] = tuple[1]);
+
+      app.browse = {
+        page: ctx.params.page,
+        perPage: qparams.perPage ? qparams.perPage : 10,
+      };
+    });
+
+    page('/article/:contentKey', function(ctx) {
+      app.route = 'articleLookup';
+      app.params = ctx.params;
+      app.$.lookupView.lookup();
+    });
+
+    // 404
+    page('*', function(ctx) {
+      //             http://johan-dev.afrozaar.com/#!/launch?\
+      //                searchBase=http://johan.afrozaar.com/ashes-support
+      //                &tk=sbp&appId=8
+      //                &irsBase=http://johan-irs.afrozaar.com/image
+      //                &contentBase=http://johan.afrozaar.com/ashes-web&launch=true
+      // Can't find: http://johan-dev.afrozaar.com/#!/launch
+      //        ?searchBase=http://johan.afrozaar.co…zaar.com/image
+      //        &contentBase=http://johan.afrozaar.com/ashes-web
+      //        &launch=true. Redirected you to Home Page
+
+      console.error('couldnt parse location from ctx: ', ctx);
+
+      if (ctx.path.startsWith('//')) {
+        page.redirect(ctx.path.substr(1));
+        return;
+      }
+
+      console.error('parsing hash from href: ', window.location.href);
+
+      var hidx = window.location.href.indexOf('#');
+      var qidx = window.location.href.indexOf('?');
+
+      var hash;
+      var qs;
+      if (qidx > hidx) { // hash at start
+        hash = window.location.href.substr(hidx, qidx - hidx);
+      } else { // hash at end
+
+        if (qidx >= 0) {
+          hash = window.location.href.substr(hidx);
+          qs = window.location.href.substr(qidx, (hidx - qidx));
+          var redr = hash.substr(hash.indexOf('/')) + qs;
+          console.warn('hash: %s, qs: %s, redr: %s', hash, qs, redr);
+          page.redirect(redr);
+        } else {
+          // no query string
+          hash = window.location.href.substr(hidx);
+          console.info('redr: ', hash.substr(hash.indexOf('/')));
+        }
+
+        return;
+      }
+
+      console.info('hidx: %s, qidx: %s, hash: %s, qs: %s', hidx, qidx, hash, qs);
+
+      var message = 'Can\'t find: ' + window.location.href  + '. Redirected you to Home Page';
+      app.showToast(message, {}, true);
+      page.redirect(app.baseUrl);
+    });
+
+    // add #! before urls
+    page({
+      hashbang: true
+    });
+
+  });
+</script>

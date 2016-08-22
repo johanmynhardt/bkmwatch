@@ -1,0 +1,204 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-article-dialog.html">
+
+<dom-module id="aca-article-list-item">
+
+  <style>
+    .img-padding {
+      margin: 0 0.5em 0.5em 0;
+      float: left;
+    }
+
+    .article-content {
+      width: 20em;
+      text-align: justify;
+      overflow: hidden;
+    }
+
+    .by-line {
+      line-height: 2;
+    }
+
+    .heading {
+      margin-bottom: 0.2em;
+    }
+
+    paper-card {
+      width: 300px;
+      margin-bottom: 0.3em;
+      margin-right: 0.3em;
+    }
+
+    .card-content {
+      height: 260px;
+      overflow: auto;
+      cursor: pointer;
+    }
+
+    .card-actions {
+      font-size: 12px;
+      font-weight: bold;
+      color: gray;
+    }
+
+  </style>
+
+  <template>
+    <paper-card>
+      <div class="card-content" on-click="_displayArticle">
+        <h4 class="heading">[[_headline(item.article)]]</h4>
+        <div class="layout horizontal center by-line">
+          By [[_author(item.article)]]
+        </div>
+        <div class="layout horizontal">
+          <div class="article-content">
+            <div style$="[[itemThumbStyle]]" class="img-padding" hidden$="[[!hasImage]]">
+              <iron-image
+                  style$="[[itemThumbStyle]]"
+                  src$="[[itemThumbUrl]]"
+                  sizing="cover" preload fade></iron-image>
+            </div>
+            <div>[[_truncate(item.article.articleHTML)]]</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-actions layout horizontal flex center">
+        <div>
+            [[_title(item)]] - [[_date(item.article.publishDate)]]
+        </div>
+        <span class="flex"></span>
+        <div hidden$="[[!_canSelectForClone()]]">
+          <paper-icon-button id="selectToggle" icon="check-box" hidden$="[[!item.selected]]" on-click="_toggleItem"></paper-icon-button>
+          <paper-icon-button id="selectToggle" icon="check-box-outline-blank" hidden$="[[item.selected]]" on-click="_toggleItem"></paper-icon-button>
+        </div>
+      </div>
+    </paper-card>
+
+    <aca-article-dialog id="articleDialog"></aca-article-dialog>
+
+  </template>
+
+  <script>
+
+    (function() {
+      Polymer({
+        is: 'aca-article-list-item',
+        properties: {
+          item: {
+            type: Object,
+            value: undefined,
+            observer: 'itemChanged'
+          },
+          itemThumbUrl: {
+            type: String,
+            value: undefined
+          },
+          itemThumbStyle: {
+            type: String,
+            value: undefined
+          },
+          hasImage: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+        },
+
+        //observers: ['itemSelectedChanged(item.selected)'],
+
+        itemChanged: function(newValue) {
+          console.log('article item changed: ', newValue);
+
+          var firstImage = this._firstImageFromArticle(newValue.article);
+          if (firstImage) {
+            this.hasImage = true;
+            this.itemThumbUrl = imgutils.irsThumb(
+              app.config,
+              imgutils.computeSquareDims(firstImage, 100, 'src'),
+              firstImage.imageURL
+            );
+            this.itemThumbStyle = imgutils.computeSquareDims(firstImage, 100, 'style');
+          } else {
+            console.warn('no image found for article');
+          }
+        },
+
+        /*itemSelectedChanged: function(newValue) {
+          console.trace('itemSelectedChanged: ', newValue);
+        },*/
+
+        _author: function(article) {
+          if (_.isObject(article)) {
+            return S(article.author).isEmpty() ? 'Unknown Author' : article.author;
+          } else {
+            return 'Unknown Author';
+          }
+        },
+
+        _canSelectForClone: function() {
+          return !app.config.standalone;
+        },
+
+        _date: function(dateLong) {
+          return new Date(dateLong).toDateString();
+        },
+
+        _displayArticle: function() {
+          this.$.articleDialog.displayArticle(this.item);
+        },
+
+        _headline: function(article) {
+          // need to check why article is null...
+          // BAOBAB-1678
+          if (_.isObject(article) && (article.label || article.headlineSummary)) {
+            return S(article.label ? article.label : article.headlineSummary).stripTags().s;
+          } else {
+            return '';
+          }
+        },
+
+        _iconStyle: function(selected) {
+          console.trace('item selected: ', selected);
+          return selected ? 'check-box' : 'check-box-outline-blank';
+        },
+
+        _toggleItem: function() {
+          //var newSelected = !this.item.selected;
+
+          //this.set('item.selected', newSelected);
+          //this._iconStyle(newSelected);
+
+          this.fire('iron-signal',{name: 'article-toggled', data: this.item});
+        },
+
+        _title: function(item) {
+          if (_.isObject(item)) {
+            return S(item.metaData.titleName).isEmpty() ? 'Unknown Title' : item.metaData.titleName;
+          } else {
+            return 'Unknown Title';
+          }
+        },
+
+        _truncate: function(input) {
+          if (input) {
+            return S(input).stripTags().s.substr(0, 200) + '...';
+          }
+        },
+
+        _firstImageFromArticle: function(article) {
+          var mediaItem = _.isObject(article) ? _.head(article.mediaList.mediaItems) : undefined;
+          return _.has(mediaItem, 'references') ? _.head(mediaItem.references) : undefined;
+        },
+
+        _itemFromCollection: function(collection, position) {
+          if (collection.length > 0 && (position - 1) < collection.length) {
+            return collection[position];
+          } else {
+            return undefined;
+          }
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

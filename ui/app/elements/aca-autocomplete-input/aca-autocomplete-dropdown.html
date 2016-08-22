@@ -1,0 +1,88 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-autocomplete-dropdown">
+
+  <style>
+
+    iron-dropdown {
+      -webkit-box-shadow: 1px 1px 12px 0px rgba(0,0,0,0.41);
+      -moz-box-shadow: 1px 1px 12px 0px rgba(0,0,0,0.41);
+      box-shadow: 1px 1px 12px 0px rgba(0,0,0,0.41);
+    }
+
+  </style>
+
+  <template>
+    <iron-dropdown id="dropdown" class="box-shadow">
+        <div class="dropdown-content">
+          <paper-listbox id="listbox">
+            <template is="dom-repeat" items="[[items]]">
+              <paper-item title$="id=[[item.id]]">[[item.label]]</paper-item>
+            </template>
+          </paper-listbox>
+        </div>
+    </iron-dropdown>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-autocomplete-dropdown',
+
+        properties: {
+          items: {
+            type: Array,
+            value: []
+          },
+          input: {
+            type: Object,
+            value: undefined
+          },
+          open: {
+            type: Boolean,
+            value: false,
+            notify: true
+          }
+        },
+
+        observers: [
+          'itemsChange(items)'
+        ],
+
+        listeners: {
+          'iron-select': 'onIronSelect'
+        },
+
+        onIronSelect: function() {
+
+          var selection = this.items[this.$.listbox.selected];
+
+          console.log('onIronSelect...:', selection);
+
+          this.$.listbox.selected = undefined;
+
+          this.fire('iron-signal', {
+            name: 'add-autocomplete-item',
+            data: {
+              for: this.for,
+              item: selection
+            }
+          });
+
+          // TODO: This is potentially not required to close. Leave open for now.
+          //this.$.dropdown.close();
+        },
+
+        itemsChange: function(newValues) {
+          if (this.$.dropdown.opened && _.isEmpty(newValues)) {
+            this.$.dropdown.close();
+          } else if (!this.$.dropdown.opened && !_.isEmpty(newValues)) {
+            this.$.dropdown.open();
+          }
+        },
+      });
+    })();
+  </script>
+</dom-module>

@@ -1,0 +1,182 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-meta-dialog-usage">
+
+  <style>
+
+    span.field-label {
+      min-width: 7em;
+      display: inline-block;
+      font-weight: bold;
+    }
+  </style>
+
+  <template>
+
+    <iron-ajax id="metaAjax"
+               url$="[[infoUrl]]"
+               content-type="application/json"
+               method="post" handle-as="json"
+               last-response="{{_lookupResponse}}"
+               last-error="{{_lastError}}"
+               ></iron-ajax>
+
+    <paper-card elevation="2" hidden$="[[!_lastError]]" heading="Error retrieving article usage.">
+      <div class="card-content">
+        [[_handleError(_lastError)]]
+      </div>
+    </paper-card>
+
+    <template is="dom-repeat" items="[[_lookupResponse.content]]" as="content">
+
+      <paper-card elevation="1">
+        <div class="card-content layout vertical">
+          <div><span class="field-label">Title:</span>[[item.metaData.titleName]]</div>
+          <div><span class="field-label">Sections:</span>[[_sectionNamesFromItem(item)]]</div>
+          <div><span class="field-label">Author:</span>[[content.article.author]]</div>
+          <div><span class="field-label">Label:</span>[[content.article.label]]</div>
+          <div><span class="field-label">Published:</span>[[_dateFromLong(content.article.publishDate)]]</div>
+          <div><span class="field-label">Headline:</span>[[_cleanedHeadlineSummary(content.article.headlineSummary)]]</div>
+
+          <template is="dom-if" if="[[_hasItems(content.article.tags)]]">
+            <div>
+              <span class="field-label">Tags:</span>
+              [[_renderArticleTags(content.article)]]
+            </div>
+          </template>
+
+          <template is="dom-if" if="[[content.article.publicUrl]]">
+            <div>
+              <span class="field-label">Published to</span>[[content.article.publicUrl]]
+            </div>
+          </template>
+
+          <template is="dom-if" if="[[content.article.geoPoint]]">
+            <div><span class="field-label">GeoPoint:</span>[[content.article.geoPoint]]</div>
+          </template>
+
+        </div>
+      </paper-card>
+
+    </template>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-meta-dialog-usage',
+
+        properties: {
+          item: {
+            type: Object,
+            value: undefined
+          },
+          _infoUrl: {
+            type: String,
+            value: ''
+          },
+          _lookupResponse: {
+            type: Object,
+            value: undefined
+          },
+          _lastError: {
+            type: Object,
+            value: undefined,
+            notify: true
+          }
+        },
+
+        observers: ['_itemChanged(item)','_lookupResponseChanged(_lookupResponse)'],
+
+        _handleError: function(error) {
+          if (_.isNull(error) || _.isNull(error.request) || _.isUndefined(error.request)) {
+            return 'Unknown error. See console for details.';
+          } else if (error.request.__data__.status > 200) {
+            return error.request.__data__.statusText;
+          } else {
+            return 'Unknown error. See console for details.';
+          }
+        },
+
+        _itemChanged: function(newItem) {
+
+          console.info('item changed: ', newItem);
+
+          if (app.config && !(_.isUndefined(newItem) || _.isNull(newItem))) {
+
+            //http --json POST "http://localhost:8080/ashes-support/support/9/sbp/8/lookup?\
+            //   contentKey=117401\
+            //   &datasetKey=forsearch\
+            //   &type=content\
+            //   &meta=all" a=b
+
+            let queryParameters = {
+              contentKey: newItem.metaData.contentKey,
+              datasetKey: 'forsearch',
+              type: 'content'
+            };
+
+            this.infoUrl = app.multiValueUrl(app.bootstrap.baseLookupTemplate, queryParameters);
+
+            this.metaResponse = {meta: {data: 'Loading...'}};
+            this.$.metaAjax.generateRequest();
+          }
+
+        },
+
+        _articleFromContent: function(content) {
+          return content.article;
+        },
+
+        _cleanedHeadlineSummary: function(headlineSummary) {
+          if (!_.isEmpty(headlineSummary)) {
+            return S(headlineSummary).stripTags().s;
+          }
+        },
+
+        _dateFromLong: function(longDate) {
+          if (longDate) {
+            var d = new Date(longDate);
+            return d.getHours() + ':' + d.getMinutes() + ' on ' + d.toDateString();
+          } else {
+            return '';
+          }
+        },
+
+        _hasItems: function(collection) {
+          return _.isArray(collection) && !(_.isEmpty(collection));
+        },
+
+        _lookupResponseChanged: function(response) {
+          console.log('lookup response: ', response);
+        },
+
+        _rawContent: function(content) {
+          console.info('stringify content: ', content);
+          return JSON.stringify(content, null, ' ');
+        },
+
+        _renderArticleTags: function(article) {
+          if (!_.isEmpty(article.tags)) {
+            return _.join(article.tags, ', ');
+          } else {
+            return '';
+          }
+        },
+
+        _sectionNamesFromItem: function(item) {
+          if (!_.isEmpty(item.metaData.sections)) {
+            return _.map(item.metaData.sections, (section) => section.sectionName)
+                .reduce((k,v) => k + ', ' + v);
+          } else {
+            return '';
+          }
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

@@ -1,0 +1,172 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-meta-dialog-meta-content">
+
+  <style>
+    :root {
+      border: 1px solid red;
+    }
+
+    div.datarow {
+      width:100%;
+      padding: 0.3em;
+      text-overflow: ellipsis;
+      border-bottom: 1px solid #666666;
+    }
+
+    div.datarow>.itemkey {
+      width: 25%;
+    }
+
+    div.datarow>.itemvalue {
+      width: 75%;
+    }
+  </style>
+
+  <template>
+
+    <iron-ajax id="metaAjax"
+               url$="[[infoUrl]]"
+               content-type="application/json"
+               last-response="{{metaResponse}}"></iron-ajax>
+
+
+    <div class="layout vertical" style="width:100%;">
+
+      <p>
+        <paper-tabs selected="{{selectedTab}}">
+          <template is="dom-repeat" items="[[_profiles]]">
+            <paper-tab>[[item.label]]</paper-tab>
+          </template>
+        </paper-tabs>
+      </p>
+
+      <iron-list items="[[_currentProfile.data]]" as="item">
+        <template>
+          <div class="layout horizontal datarow">
+            <div class="itemkey">
+              [[keyFrom(item)]]
+            </div>
+            <div class="itemvalue">
+              [[valueFrom(item)]]
+            </div>
+          </div>
+        </template>
+      </iron-list>
+    </div>
+  </template>
+
+  <script>
+
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-meta-dialog-meta-content',
+
+        properties: {
+          source: {
+            type: String,
+            value: undefined
+          },
+          infoUrl: {
+            type: String,
+            value: ''
+          },
+          metaResponse: {
+            type: Object,
+            value: {},
+            observer: '_metaResponseChanged'
+          },
+          _profiles: {
+            type: Array,
+            value: function() {
+              return [{label: 'x'}];
+            }
+          },
+          _currentProfile: {
+            type: Object,
+            value: {}
+          },
+
+          selectedTab: {
+            type: Number,
+            value: 0,
+            observer: '_tabSelected'
+          },
+
+          /**
+           * Response cache: {urlAsKey: responseAsValue}
+           */
+          _cache: {
+            type: Object,
+            value: {}
+          }
+        },
+
+        observers: ['sourceChanged(source)'],
+
+        sourceChanged: function(newValue) {
+          if (app.config) {
+            if (!_.includes(_.keys(this._cache), newValue)) {
+              console.debug('%s not in cache. Updating...', newValue);
+
+              let values = {
+                source: newValue,
+                meta: true,
+                format: 'raw'
+              };
+
+              this.infoUrl = app.multiValueUrl(app.bootstrap.baseIrsMetaTemplate, values);
+
+              this.metaResponse = {meta: {data: 'Loading...'}};
+              this.$.metaAjax.generateRequest();
+            } else {
+              this.set('metaResponse', this._cache[newValue]);
+            }
+          }
+        },
+
+        keyFrom: function(entry) {
+          return entry[0];
+        },
+
+        valueFrom: function(entry) {
+          return entry[1];
+        },
+
+        _metaResponseChanged: function(newValue) {
+          if (!_.isEqual(newValue, {meta: {data: 'Loading...'}})) {
+            if (this.source && !_.includes(this._cache, this.source)) {
+              this._cache[this.source] = newValue;
+            }
+          }
+
+          const ignored = ['SourceFile'];
+
+          const shouldExclude = (key) => {
+            return _.includes(ignored, key);
+          };
+
+          const getProfile = (key) => {
+            return {label: key, data: _.toPairs(newValue[key])};
+          };
+
+          let profiles = _.map(_.filter(_.keys(newValue), _.negate(shouldExclude)), getProfile);
+
+          this.set('_profiles', profiles);
+          this.set('selectedTab', 0);
+          this.set('_currentProfile', this._profiles[this.selectedTab]);
+
+          this.fire('iron-signal', {name: 'meta-data-received', data: newValue});
+        },
+
+        _tabSelected: function(e) {
+          console.log('tab selected: ', e);
+          this.set('_currentProfile', this._profiles[this.selectedTab]);
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

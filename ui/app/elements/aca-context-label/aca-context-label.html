@@ -1,0 +1,44 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-context-label">
+  <style>
+
+  </style>
+
+  <template>
+    <iron-signals on-iron-signal-config-updated="_configUpdated"></iron-signals>
+    <span hidden$="[[_hidden]]">: [[value]]<content></content></span>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-context-label',
+        properties: {
+          value: {
+            type: String,
+            value: null,
+            notify: true
+          },
+          _hidden: {
+            type: Boolean,
+            value: true
+          }
+        },
+
+        _isHidden: function() {
+          return _.isNull(this.value) || _.isUndefined(this.value);
+        },
+
+        _configUpdated: function() {
+          if (_.has(app.config, 'contextLabel')) {
+            this.set('value', app.config.contextLabel);
+          }
+          this.set('_hidden', this._isHidden());
+        }
+      });
+    })();
+  </script>
+</dom-module>

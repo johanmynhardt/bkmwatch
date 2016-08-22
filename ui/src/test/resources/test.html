@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test Sandbox</title>
+  </head>
+  <body>
+    <script>
+
+      function F() {};
+
+      function cloneMap(x) {
+        var ret = {};
+        Object.keys(x).forEach(function(key) {
+          ret[key] = x[key];
+        });
+
+        return ret;
+      }
+
+      var item = {foo: 'bar'};
+
+      console.log('item: ', item);
+
+      var newItem = cloneMap(item);
+      newItem.baz = 'bossy';
+
+      console.log('newItem: ', newItem);
+
+      if (!(newItem.foo && newItem.baz && newItem.x)) {
+        throw 'Clone failed!';
+      }
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-search-result-counter">
+
+  <style>
+    :host {
+      display: flex;
+      margin-bottom: 1em;
+      color: #666;
+    }
+  </style>
+
+  <template>
+    <div>[[displayText]]
+      <content></content>
+    </div>
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'aca-search-result-counter',
+        properties: {
+          displayText: {
+            type: String,
+            computed: 'resultsText(resultText, totalElements, searchDuration)'
+          },
+
+          resultText: {
+            type: String,
+            value: 'Showing about {x} results ({y} seconds)'
+          },
+
+          searchDuration: {
+            type: Number,
+            value: 0
+          },
+
+          totalElements: {
+            type: Number,
+            value: 0
+          }
+
+        },
+
+        resultsText: function(resultText, totalElements, searchDuration) {
+          console.debug('resultText: %s, totalElements: %s, searchDuration: %s ms',
+              resultText, totalElements, searchDuration);
+          return _.template(resultText)({x: totalElements, y: (searchDuration / 1000)});
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

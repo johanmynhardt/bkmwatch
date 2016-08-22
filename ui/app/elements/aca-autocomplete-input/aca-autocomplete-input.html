@@ -1,0 +1,176 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-autocomplete-item.html">
+<link rel="import" href="aca-autocomplete-dropdown.html">
+
+<dom-module id="aca-autocomplete-input">
+
+  <style>
+
+    #container>div, #container>paper-input {
+      display: inline-block;
+    }
+
+    aca-autocomplete-item, .aca-autocomplete-item {
+      display: inline-block;
+    }
+
+  </style>
+
+  <template>
+
+    <iron-signals
+                  on-iron-signal-remove-autocomplete-item="removeAutocompleteItem"
+                  on-iron-signal-add-autocomplete-item="addAutocompleteItem">
+    </iron-signals>
+
+    <div id="container">
+      <div class="itemContainer">
+        [[title]]
+        <template is="dom-repeat" items="[[selected]]">
+          <aca-autocomplete-item item="[[item]]" for="[[for]]"></aca-autocomplete-item>
+        </template>
+      </div>
+      <paper-input label="[[label]]" value="{{value}}"></paper-input>
+
+    </div>
+    <aca-autocomplete-dropdown id="acdropdown" for="[[for]]" title="[[label]]"></aca-autocomplete-dropdown>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-autocomplete-input',
+
+        properties: {
+
+          _paperInput: {
+            type: Object,
+            value: undefined
+          },
+
+          selected: {
+            type: Array,
+            value: [],
+            notify: true
+          },
+
+          available: {
+            type: Array,
+            value: function() {
+              return _.map(_.range(0, 200), function(x) {
+                return {
+                  id: x,
+                  label: '' + x
+                };
+              });
+            }
+          },
+
+          db: {
+            type: String,
+            value: undefined
+          },
+
+          selectionListener: {
+            type: Object,
+            value: undefined
+          },
+
+          minExpand: {
+            type: Number,
+            value: 1
+          }
+        },
+
+        attached: function() {
+          var inputItem = this.$.container.querySelector('paper-input');
+
+          if (!_.isUndefined(inputItem)) {
+            this._paperInput = inputItem;
+            this.listen(this._paperInput, 'keyup', 'onInputChange');
+          }
+        },
+
+        addToSelection: function(newItem) {
+          console.trace('adding to selection(for=%s): %s, %o',
+                        this.for, newItem.label, this.selected);
+          this.push('selected', newItem);
+          this._paperInput.value = '';
+
+          if (!_.isUndefined(this.selectionListener)) {
+            console.log('calling onSelect:', this.selectionListener);
+            this.selectionListener.onSelect(newItem);
+          }
+        },
+
+        removeFromSelection: function(itemToRemove) {
+
+          console.info('removing %s from %o', itemToRemove.label, _.map(this.selected, 'label'));
+
+          var idx = _.indexOf(this.selected, itemToRemove);
+          console.info('removing item at idx: ', idx);
+          if (_.gt(idx, -1)) {
+            console.info('removed item from list: ', this.splice('selected', idx, 1));
+          } else {
+            console.warn('item %o not found in list %o', itemToRemove, this.selected);
+          }
+        },
+
+        onInputChange: function(event) {
+          if (!_.isUndefined(event.target)) {
+            var val = _.toLower(event.target.value);
+            var min = this.minExpand;
+
+            var inputLengthGTE = function(input, min, debug) {
+              var toReturn = _.gte(_.size(input), min);
+              if (debug) {
+                console.trace('_.gte(_.size(%s), %s): %s', input, min, toReturn);
+              }
+              return toReturn;
+            };
+
+            var isCtrlSpace = function(e) {
+              var KEY_CODE_SPACE = 32;
+              return e.ctrlKey && _.isEqual(e.keyCode, KEY_CODE_SPACE);
+            };
+
+            var filteredItems = function(collection, filter) {
+              return _.filter(collection, function(x) {
+                return _.includes(_.toLower(x.label), filter);
+                //return _.startsWith(_.toLower(x.label), filter);
+              });
+            };
+
+            if (inputLengthGTE(val, min)) {
+              var collection = _.uniqBy(app.db[this.db], 'label');
+              this.$.acdropdown.items = filteredItems(collection, val);
+            } else if (isCtrlSpace(event)) {
+              this.$.acdropdown.items = _.sortBy(_.uniqBy(app.db[this.db], 'label'), 'label') ;
+            } else {
+              //this.$.acoverlay.items = [];
+              console.warn('input value less than %s chars', min);
+            }
+          } else { console.warn('not responding to input'); }
+        },
+
+        addAutocompleteItem: function(e) {
+          if (_.isEqual(this.for, e.detail.for)) {
+            console.trace('iron-signal: request to add item: ', e);
+            this.addToSelection(e.detail.item);
+          }
+        },
+
+        removeAutocompleteItem: function(e) {
+          if (_.isEqual(this.for, e.detail.for)) {
+            console.trace('iron-signal: request to remove item: ', e);
+            this.removeFromSelection(e.detail.item);
+          }
+        },
+      });
+    })();
+  </script>
+
+</dom-module>

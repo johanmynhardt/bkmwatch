@@ -1,0 +1,127 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-article-list-item.html">
+
+<dom-module id="aca-article-list">
+
+<style is="custom-style">
+    paper-card {
+      width: 25em;
+      /*       height: 25em; */
+    }
+
+    paper-fab#insert {
+      position: fixed;
+      background-color: #337ab7;
+      right: 20px;
+      top: 85px;
+      z-index: 9999;
+    }
+  </style>
+
+  <template>
+    <iron-signals on-iron-signal-article-toggled="_articleToggled"></iron-signals>
+
+    <template is="dom-if" if="[[_showInsertFab]]">
+        <paper-fab id="insert" icon="forward" title="Insert" on-click="_sendToInitiator"></paper-fab>
+    </template>
+
+    <div class="horizontal layout wrap">
+      <template id="articles" is="dom-repeat" items="{{articles}}" as="article">
+        <aca-article-list-item item="{{article}}" selected="[[_isSelected(article)]]"></aca-article-list-item>
+      </template>
+    </div>
+  </template>
+
+  <script>
+
+    (function() {
+
+      'use strict';
+
+      Polymer({
+        is: 'aca-article-list',
+
+        properties: {
+          selectedItem: {
+            type: Array,
+            value: [],
+            /*notify:true,*/
+            reflectToAttribute: true
+          },
+          _showInsertFab: {
+            type: Boolean,
+            value: false,
+          },
+
+          allowMulti: {
+            type: Boolean,
+            value: false
+          }
+        },
+
+        stringify: function(obj) {
+          return JSON.stringify(obj, null, ' ');
+        },
+
+        _articleToggled: function(e) {
+          this._setSelected(e.detail, !e.detail.selected);
+        },
+
+        _isSelected: function(article) {
+          var isSelected = _.has(article, 'selected') && article.selected;
+          console.log('isSelected: %o: ', article, isSelected);
+          return isSelected;
+        },
+
+        _setSelected: function(newValue, newState) {
+          if (!app.config.multiSelect) {
+            // reset selection
+            this.set('selectedItem', []);
+          }
+
+          let idx = this.selectedItem.indexOf(newValue);
+          let headline = newValue.article.headlineFull || newValue.article.headlineSummary;
+          let titleToUse = headline ? S(headline).stripTags().s : '(No headline)';
+          let message;
+
+          if (newState && idx <= 0) {
+            this.push('selectedItem', newValue);
+            message = 'Selected article: {title}';
+          } else if (!newState && idx >= 0) {
+            this.splice('selectedItem', idx, 1);
+            message = 'Removed from selection: {title}';
+          } else {
+            console.warn('Unexpected condition: newState=%s, idx=%s', newState, idx);
+            message = 'Removed from selection: {title}';
+          }
+          app.showToast(message, {title: titleToUse});
+
+          this._syncSelected();
+
+          this.set('_showInsertFab', !_.isEmpty(this.selectedItem) && !app.config.standalone);
+        },
+
+        _syncSelected: function() {
+
+          var toggleSelectedState = function(value) {
+            return function(article) {
+              var articleIdx = this.articles.indexOf(article);
+              if (articleIdx >= 0) {
+                this.set(['articles', articleIdx, 'selected'], value);
+              }
+            }.bind(this);
+          }.bind(this);
+
+          this.articles.forEach(toggleSelectedState(false));
+          this.selectedItem.forEach(toggleSelectedState(true));
+        },
+
+        _sendToInitiator: function() {
+          app.sendToInitiator('selected-article', 'item', this.selectedItem);
+        }
+
+      });
+    })();
+  </script>
+
+</dom-module>

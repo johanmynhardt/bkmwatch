@@ -1,0 +1,160 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="bkm-search">
+  <template>
+      <iron-ajax id="ajaxSearch"
+           method="get"
+           handle-as="json"
+           content-type="application/json"
+           url$="[[_url]]"
+           last-response="{{alerts}}"
+           on-response="handleResponse"
+           loading="{{loading}}"
+           auto>
+    
+      </iron-ajax>
+
+      <paper-input label="Enter keyword"
+                  type="text" 
+                  value="{{q}}" 
+                  placeholder="eg. SAPS, IR or Bergvliet">
+          <paper-icon-button suffix icon="search" on-click="doSearch"></paper-icon-button>
+      </paper-input>
+
+      <bkm-alerts-table items="[[items]]" hidden$="[[!hasResults]]">
+          
+          <h4>Showing [[resultCount]] results for [[currentQ]]</h4>
+          
+          <div class="horizontal layout flex middle">
+              <span class="flex"></span>
+              <paper-icon-button icon="chevron-left" 
+                                 on-click="previousPage" 
+                                 hidden$="[[_firstPage]]">
+              </paper-icon-button>
+              <paper-button noink>[[pageDisplay]]/[[pages]]</paper-button>
+              <paper-icon-button icon="chevron-right" 
+                                 on-click="nextPage" 
+                                 hidden$="[[_lastPage]]">     
+              </paper-icon-button>
+          </div>
+      </bkm-alerts-table>
+
+      <h4 hidden$="[[hasResults]]">No Results</h4>
+  </template>
+
+  <script>
+    class BkmSearch {
+      beforeRegister() {
+        this.is = 'bkm-search';
+
+        this.properties = {
+          alerts: {
+            type: Array,
+            value: []
+          },
+
+          page: {
+            type: Number,
+            value: 0
+          },
+
+          pageDisplay: {
+            type: Number,
+            value: 0
+          },
+
+          pages: {
+            type: Number,
+            value: 0
+          },
+
+          perPage: {
+            type: Number,
+            value: 10
+          },
+
+          items: {
+            type: Array,
+            value: [],
+          },
+
+          q: {
+            type: String,
+            value: '',
+            observer: 'qChanged'
+          },
+
+          currentQ: {
+            type: String,
+            value: ''
+          },
+
+          hasResults: {
+            type: Boolean,
+            value: false
+          },
+
+          _firstPage: {
+            type: Boolean,
+            value: true
+          },
+
+          _lastPage: {
+            type: Boolean,
+            value: true
+          },
+
+          _url: {
+            type: String,
+            value: ''
+          }
+        };
+      }
+
+      handleResponse(resp) {
+        this.set('currentQ', this.q);
+        this.set('resultCount', this.alerts.length);
+        this.set('page', 0);
+        this.set('pages', Math.ceil(this.alerts.length / this.perPage));
+        this.set('pageDisplay', this.page + 1);
+
+        if (resp.detail.response.length > 0) {
+          this.updateItems(this.page, this.perPage);
+        } else {
+          this.set('items', []);
+        }
+
+        this.set('hasResults', this.items.length > 0);
+      }
+
+      updateItems(page, perPage) {
+        console.info('page: %s, perPage: %s', page, perPage);
+        this.set('pageDisplay', this.page + 1);
+        let start = page * perPage;
+        let end = start + perPage;
+        this.set('items', this.alerts.slice(start, end));
+        this.set('_firstPage', this.page <= 0);
+        this.set('_lastPage', this.alerts.length === 0 || this.items.length < this.perPage);
+      }
+
+      doSearch() {
+        this.set('_url', 'record/search?search=' + encodeURIComponent(this.q));
+      }
+
+      qChanged(newValue, oldValue) {
+        console.info('q updated: %s -> %s', oldValue, newValue);
+       
+      }
+
+      previousPage() {
+        this.updateItems(this.page = this.page-1, this.perPage);        
+      }
+
+      nextPage() {
+        this.updateItems(this.page = this.page+1, this.perPage);
+      }
+    }
+
+    Polymer(BkmSearch);
+  </script>
+</dom-module>

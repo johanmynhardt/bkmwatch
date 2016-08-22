@@ -1,0 +1,451 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-search-article-parameters.html">
+<link rel="import" href="aca-search-filter.html">
+<link rel="import" href="aca-search-pager.html">
+<link rel="import" href="aca-search-result-counter.html">
+<link rel="import" href="aca-search-typeselector.html">
+
+<dom-module id="aca-search">
+
+  <style>
+    :host {
+      display: block;
+    }
+
+  </style>
+
+  <template>
+    <style include="shared-styles"></style>
+
+    <iron-signals
+        on-iron-signal-page-next="fetchNext"
+        on-iron-signal-page-previous="fetchPrevious"
+        on-iron-signal-do-search="doSearch">
+    </iron-signals>
+
+    <iron-ajax id="ajaxSearch"
+               method="post"
+               handle-as="json"
+               content-type="application/json"
+               url$="[[requestUrl]]"
+               last-response="{{pageData}}"
+               on-response="handleResponse"
+               loading="{{loading}}"
+               body='{}'>
+    </iron-ajax>
+
+    <!-- search box -->
+
+    <iron-a11y-keys id="keys" target="[[target]]" keys="enter" on-keys-pressed="doSearch"></iron-a11y-keys>
+
+    <div class="layout horizontal">
+      <paper-input id="submit" label="Enter search query" value="{{searchModel}}" class="layout horizontal center">
+        <paper-icon-button suffix icon$="[[_filterDropdownIcon]]" on-click="toggleFilter"></paper-icon-button>
+        <paper-button suffix noink on-click="doSearch" hidden$="[[_filterDisplay]]">
+          <iron-icon icon="search"></iron-icon>
+          Search
+        </paper-button>
+      </paper-input>
+    </div>
+
+    <!-- search filter -->
+    <aca-search-filter id="mySearchFilter" display-filter="{{_filterDisplay}}"
+                       search-type="{{searchType}}"
+                       start-date="{{startDate}}" end-date="{{endDate}}"
+                       title-filter="{{titleFilter}}" section-filter="{{sectionFilter}}">
+      <aca-search-typeselector selected="{{searchType}}"></aca-search-typeselector>
+    </aca-search-filter>
+
+
+
+    <content></content>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+      Polymer({
+        is: 'aca-search',
+        properties: {
+          loading: {
+            type: Boolean,
+            value: false,
+            observer: 'loadingChanged'
+          },
+          searchDuration: {
+            type: Number,
+            value: 0,
+            notify: true
+          },
+          searchModel: {
+            type: String,
+            value: '',
+            readOnly: false,
+            notify: true
+          },
+          searchInProgress: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          searchType: {
+            type: String,
+            value: 'type-media',
+            notify: true,
+            observer: '_searchTypeChanged'
+          },
+          canSubmit: {
+            type: Boolean,
+            value: true,
+            notify: true,
+            observer: 'canSubmitChanged'
+          },
+          pageData: {
+            type: Object,
+            value: {},
+            observer: 'pageDataResponse',
+            notify: true
+          },
+          results: {
+            type: Array,
+            value: undefined,
+            notify: true
+          },
+          firstSearchReturned: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          forQuery: {
+            type: String,
+            value: undefined,
+            notify: true
+          },
+          page: {
+            type: Number,
+            value: 0,
+            notify: true
+          },
+          pages: {
+            type: Number,
+            value: 0,
+            notify: true
+          },
+          pageSize: {
+            type: Number,
+            value: 10,
+            notify: true
+          },
+          totalElements: {
+            type: Number,
+            value: 0,
+            notify: true
+          },
+          hasNext: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          hasPrevious: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          lastSearch: {
+            type: String,
+            value: undefined
+          },
+          minSubmit: {
+            type: Number,
+            value: 3
+          },
+          target: {
+            type: Object,
+            value: function() {
+              let target = this.$.submit;
+              console.log('target: ', target);
+              return target;
+            },
+            notify: true
+          },
+
+          _filterDisplay: {
+            type: Boolean,
+            value: false,
+            observer: '_filterDisplayChanged'
+          },
+
+          _filterDropdownIcon: {
+            type: String,
+            value: 'arrow-drop-down'
+          }
+        },
+        observers: [
+          'queryChanged(searchModel)'
+        ],
+
+        /**
+         * Only activate canSubmit after a delay, otherwise the search is submitted prematurely.
+         */
+        canSubmitChanged: function(newValue, oldValue) {
+          if (_.isUndefined(oldValue)) {
+            let activateSubmit = function(host) {
+              return function() {
+                host.canSubmit = true;
+              };
+            };
+            setTimeout(activateSubmit(this), 500);
+          }
+        },
+
+        handleResponse: function(response) {
+
+          let extractDuration = function(resp) {
+            const durHeader = 'X-Afzr-Duration-Search';
+            let duration = resp.detail.xhr.getResponseHeader(durHeader);
+            let durInt;
+
+            if (_.isEmpty(duration)) {
+              durInt = 0;
+              console.error('Could not extract header \'%s\' from response.' +
+                  ' (Backend possibly doesn\'t support correct CORS headers).' +
+                  ' Duration was set to 0.', durHeader);
+            } else {
+              durInt = parseInt(duration);
+            }
+            return durInt;
+          };
+
+          this.searchDuration = extractDuration(response);
+        },
+
+        doSearch: function(optReset) {
+          if (this.canSubmit) {
+            if (!_.isEqual(this.searchModel, this.lastSearch) || optReset) {
+              this.results = [];
+            }
+
+            const resetForSearch = (fieldsFor) => {
+              fieldsFor.page = 0;
+              fieldsFor.pages = 0;
+              fieldsFor.hasNext = false;
+              app.showToast('Searching for: \'{text}\'', {text: fieldsFor.searchModel});
+              fieldsFor.searchInProgress = true;
+              fieldsFor.lastSearch = fieldsFor.searchModel;
+              return fieldsFor;
+            };
+
+            resetForSearch(this)._generateRequest();
+          } else {
+            console.warn('searchModel is undefined/empty. Not submitting search.');
+          }
+        },
+
+        queryChanged: function(newQuery) {
+          this.canSubmit = (newQuery.length >= this.minSubmit);
+        },
+
+        pageDataResponse: function() {
+          const pushResult = to => newItem => to.push('results', newItem);
+
+          const isTypeAndHasPath = _.curry(function(host, test, path) {
+            if (_.isString(test)) {
+              test = [test];
+            }
+            let result = _.includes(test, host.searchType) && _.hasIn(host, path);
+            console.trace('isTypeAndHasPath: ', test, path, host.searchType, result);
+            return result;
+          });
+
+          const typeMap = {
+            'type-media': 'pageData.media',
+            'type-image': 'pageData.media',
+            'type-video': 'pageData.media',
+            'type-article': 'pageData.content'
+          };
+
+          const mediaTypes = ['type-media','type-image', 'type-video'];
+          const articleTypes = ['type-article'];
+
+          let foundType;
+          if (isTypeAndHasPath(this, mediaTypes, typeMap[mediaTypes[0]])) {
+            foundType = this.pageData.media;
+          } else if (isTypeAndHasPath(this, articleTypes, typeMap[articleTypes[0]])) {
+            foundType = this.pageData.content;
+          } else {
+            console.error('No element \'%s\' for search type: \'%s\' found.', typeMap[this.searchType], this.searchType);
+          }
+
+          if (foundType) {
+            if (app.config.context === 'related') {
+              _.chain(foundType)
+                  .filter(item => _.has(item, 'metaData.publicReference'))
+                  .filter(item => !_.isEmpty(item.metaData.publicReference))
+                  .value()
+                  .forEach(pushResult(this));
+            } else {
+              foundType.forEach(pushResult(this));
+            }
+          } else {
+            this.results = [];
+          }
+
+          if (this.firstSearchReturned === false) {
+            this.firstSearchReturned = true;
+          }
+
+          this.forQuery = this.searchModel;
+
+          if (this.pageData.pageData) {
+            let pageData = this.pageData.pageData;
+            console.log('pageData: ', pageData);
+            this.pages = pageData.totalPages;
+            this.totalElements = pageData.totalElements;
+            this.set('pages', this.pages);
+
+            this.hasNext = pageData.pageNumber < (pageData.totalPages - 1);
+            this.hasPrevious = pageData.pageNumber > 0;
+            this.searchInProgress = false;
+          }
+        },
+
+        displayPage: function(page) {
+          return page + 1;
+        },
+
+        fetchNext: function() {
+          console.log('fetchNext...');
+          this.page = this.page + 1;
+          this.searchInProgress = true;
+          this._generateRequest();
+        },
+
+        fetchPrevious: function() {
+          this.page = this.page - 1;
+          this._generateRequest();
+        },
+
+        manyPages: function(pages) {
+          return pages > 1;
+        },
+
+        toggleFilter: function() {
+          this.set('_filterDisplay', !this.$.mySearchFilter.displayFilter);
+        },
+
+        _filterDisplayChanged: function(newValue) {
+          let upDown = (display) => 'arrow-drop-' + (display ? 'up' : 'down');
+          this.set('_filterDropdownIcon', upDown(newValue));
+        },
+
+        _getTime: function(date, orElse) {
+          return date ? date.getTime() : orElse;
+        },
+
+        loadingChanged: function(newValue) {
+          console.info('loadingChanged: ', newValue);
+          this.fire('iron-signal', {
+            name: 'search-loading-changed',
+            data: {
+              loading: newValue,
+              hasNext: this.hasNext
+            }
+          });
+        },
+
+        nextPage: function() {
+          this.fetchNext();
+        },
+
+        displayToast: function(message) {
+          console.info('toast: %s', message);
+          app.showToast(message);
+        },
+
+        _generateRequest: function() {
+          this._updateRequestUrl();
+
+          this.$.ajaxSearch.generateRequest();
+        },
+
+        _searchTypeChanged: function(newSearchType) {
+          console.log('newSearchType: ', newSearchType);
+          this.doSearch(true);
+        },
+
+        _updateRequestUrl: function() {
+          console.log('Updating request URL... app.config: ', app.config);
+
+          /*var wildcardPaddingWithLowercase = function(input) {
+            if (_.isEmpty(input)) {
+              return '*';
+            } else {
+              return _.template('*{value}*')({
+                value: encodeURIComponent(_.toLower(input))
+              });
+            }
+          };*/
+
+          const typeMap = {
+            // the value will be used in search query for type parameter.
+            // currently only content and media is supported.
+            // new types in development (elasticsearch): image, video, audio.
+            'type-article': 'content',
+            'type-audio': 'audio',
+            'type-image': 'image',
+            'type-video': 'video',
+            'type-media': 'media', // deprecated
+
+            forType: (input) => typeMap[input]
+          };
+
+          /*var collectionFilter = function(collection) {
+            var firstItemOrValue = _.isArray(collection) ? _.first(collection) : collection;
+            return wildcardPaddingWithLowercase(_.has(firstItemOrValue, 'label') ?
+                firstItemOrValue.label :
+                firstItemOrValue);
+          };*/
+
+          const collectionFilterMulti = (collection) => {
+            let result = _.compact(_.map(collection, (item) => _.has(item, 'label') ? item.label : undefined));
+
+            return _.isEmpty(result) ? '' : result;
+          };
+
+          const optParams = (parameters, optSource) => {
+            _.each(optSource, (value, key) => {
+              if (!_.isEmpty(value)) {
+                parameters[key] = value;
+              }
+            });
+          };
+
+          let queryParameters = {
+            datasetKey: 'forsearch',
+            type: typeMap.forType(this.searchType),
+            // include publicReference if context is 'related'.
+            meta: app.config.context === 'related' ?
+                _.join(['all', 'publicReference'], ',') :
+                'all',
+            pageNumber: this.page,
+            pageSize: this.pageSize,
+            searchMode: 'archive'
+          };
+
+          optParams(queryParameters, {
+            term: this.searchModel,
+            titleName: collectionFilterMulti(this.$.mySearchFilter.titles),
+            'sections.sectionName': collectionFilterMulti(this.$.mySearchFilter.sections),
+            startDate: this._getTime(this.startDate, ''),
+            endDate: this._getTime(this.endDate, '')
+          });
+
+          this.requestUrl = app.multiValueUrl(app.bootstrap.baseSearchTemplate, queryParameters);
+
+          console.info('SEARCH_REQUEST_URL: %s', this.requestUrl);
+        }
+      });
+    })();
+  </script>
+</dom-module>

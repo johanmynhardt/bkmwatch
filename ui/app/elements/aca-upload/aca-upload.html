@@ -1,0 +1,361 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="aca-upload-item.html">
+
+<dom-module id="aca-upload">
+  <template>
+
+    <style>
+
+      #postButton.enabled {
+        color: white;
+        background-color: #0064ad;
+      }
+
+      .toast-hide-button {
+        color: yellow;
+        border: 1px solid white;
+        border-radius: 5px;
+      }
+
+      .inline {
+        display: inline-block;
+      }
+    </style>
+
+    <iron-signals on-iron-signal-upload-complete="uploadCompleted"></iron-signals>
+
+    <iron-pages selected="{{step}}">
+
+      <section>
+        <h3>Add Headline</h3>
+        <div>
+          <p><em>Fill out the following fields to continue:</em></p>
+          <paper-input
+              class="flex"
+              label="Headline"
+              value="{{headline}}">
+          </paper-input>
+
+          <paper-input
+              class="inline"
+              label="Author"
+              value="{{author}}"></paper-input>
+
+          <paper-button suffix noink
+                        hidden$="[[!canAddMedia]]"
+                        on-click="showUploads">Next
+          </paper-button>
+
+        </div>
+      </section>
+
+      <section>
+        <div class="layout horizontal flex">
+          <h3 class="flex">Add Media</h3>
+          <paper-icon-button id="reset" icon="undo" on-click="reset"></paper-icon-button>
+          <paper-tooltip for="reset">Start again</paper-tooltip>
+        </div>
+
+        <paper-input
+            class="flex"
+            label="Headline"
+            value="{{headline}}">
+        </paper-input>
+
+
+        <div class="layout horizontal">
+          <paper-input
+              class="inline"
+              label="Author"
+              value="{{author}}"></paper-input>
+          <span class="flex"></span>
+          <paper-toggle-button noink checked="{{enableBody}}">Body</paper-toggle-button>
+        </div>
+
+        <paper-textarea
+            label="Body"
+            value="{{body}}"
+            hidden$="[[!enableBody]]"
+            class="flex"></paper-textarea>
+
+        <p>Once all the media has been uploaded, it can can be submitted.</p>
+
+        <div id="actions" class="layout horizontal flex">
+          <span class="flex"></span>
+          <paper-button on-click="launchFileInput">
+            <iron-icon icon="add"></iron-icon>
+            &nbsp;Add Media
+          </paper-button>
+          <paper-button
+              disabled$="[[!canSubmit]]"
+              id="postButton"
+              on-click="doSubmit"
+              raised>
+            <iron-icon icon="cloud-upload"></iron-icon>
+            &nbsp;Post
+          </paper-button>
+        </div>
+
+        <div id="thumbs">
+          <div class="layout horizontal">
+            <h4 class="flex">Media</h4>
+            <h5 hidden$="[[!hasMedia]]">Items: [[files.length]]</h5>
+          </div>
+
+          <div hidden$="[[hasMedia]]">
+            No Media
+          </div>
+
+          <template is="dom-repeat" items="[[files]]">
+            <aca-upload-item file="[[item]]"></aca-upload-item>
+          </template>
+        </div>
+
+        <input id="fileInput"
+               type="file"
+               accept="audio/*,image/*,video/*"
+               multiple hidden
+               on-change="handleFiles"/>
+      </section>
+
+      <section>
+        <h3>Preview Submit</h3>
+
+        <p>other stuff here...</p>
+        <paper-button raised disabled>Submit</paper-button>
+      </section>
+
+    </iron-pages>
+
+    <paper-toast id="resetWarning"
+                 duration="0"
+                 text="One or more uploads in progress.">
+      <paper-button class="toast-hide-button" on-click="hideWarning">OK</paper-button>
+    </paper-toast>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-upload',
+
+        properties: {
+          addingUpload: {
+            type: Boolean,
+            value: false
+          },
+
+          allMediaProcessed: {
+            type: Boolean,
+            value: false
+          },
+
+          canAddMedia: {
+            type: Boolean,
+            value: false
+          },
+
+          canSubmit: {
+            type: Boolean,
+            value: false
+          },
+
+          author: {
+            type: String,
+            value: undefined
+          },
+          headline: {
+            type: String,
+            value: undefined,
+            observer: 'headlineChanged'
+          },
+          summary: {
+            type: String,
+            value: undefined,
+          },
+          body: {
+            type: String,
+            value: undefined
+          },
+
+          hasMedia: {
+            type: Boolean,
+            value: false
+          },
+
+          files: {
+            type: File,
+            value: []
+          },
+
+          filesUploaded: {
+            type: File,
+            value: []
+          },
+
+          step: {
+            type: Number,
+            value: 0
+          }
+        },
+
+        get hasHeadline() {
+          return !_.isEmpty(this.headline) && this.headline.length > 5;
+        },
+
+        get hasCompletedUploads() {
+          return this.files.length === this.filesUploaded.length &&
+              this.filesUploaded.length > 0;
+        },
+
+        get hasUploadsInProgress() {
+          return this.files.length > 0 && this.filesUploaded.length < this.files.length;
+        },
+
+        get uploadEndpoint() {
+          let templateUrl = app.bootstrap.withPath(app.bootstrap.media);
+          return app.urlFromConfig(app.config, templateUrl);
+        },
+
+        headlineChanged: function() {
+          this.set('canAddMedia', this.hasHeadline);
+          this.syncSubmitStatus();
+        },
+
+        doSubmit: function(e) {
+          var endpoint = this.uploadEndpoint;
+          console.info('submitting from event: ', e);
+
+          var attachMediaDetails = function(filesUploaded) {
+            var updateFile = function(uploadedFile) {
+              var found = _.find(this.files, {
+                lastModified: uploadedFile.file.lastModified,
+                name: uploadedFile.file.name,
+                size: uploadedFile.file.size,
+                type: uploadedFile.file.type
+              });
+
+              if (found) {
+                // currently the only field updated post-upload.
+                uploadedFile.caption = found.caption;
+              }
+            }.bind(this);
+
+            _.each(filesUploaded, updateFile);
+            return filesUploaded;
+          }.bind(this);
+
+          let data = {
+            author: this.author,
+            headline: this.headline,
+            summary: this.summary,
+            body: this.body,
+            media: attachMediaDetails(this.filesUploaded)
+          };
+
+          console.info('Submitting to endpoint [%s] data: ', endpoint, data);
+
+          axios.post(endpoint, data, {withCredentials: true})
+              .then(function(res) {
+                console.info('upload complete: ', res);
+                app.showToast('Upload complete! :)');
+                this.reset();
+                page.redirect('/article/' + res.data.entity.id);
+              }.bind(this))
+              .catch(function(err) {
+
+                if (_.hasIn(err, 'data.entity') && err.data.entity) {
+                  app.showPermaToast('Upload failed. Message from server: ' + err.data.entity);
+                } else {
+                  console.error('Upload error: ', err);
+                  app.showToast('Upload failed: {err}. See console for more info.', {
+                    err: err
+                  }, true);
+                }
+              });
+        },
+
+        showAdder: function() {
+          this.addingUpload = true;
+        },
+
+        showUploads: function() {
+          this.set('step', 1);
+        },
+
+        launchFileInput: function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          this.$.fileInput.click();
+        },
+
+        uploadCompleted: function(e) {
+          console.info('upload completed: ', e);
+
+          const withHydratedFileInfo = (detail) => {
+            return {
+              entity: detail.entity,
+              file: {
+                name: detail.file.name,
+                lastModified: detail.file.lastModified,
+                lastModifiedDate: detail.file.lastModifiedDate,
+                size: detail.file.size,
+                type: detail.file.type
+              }
+            };
+          };
+
+          this.push('filesUploaded', withHydratedFileInfo(e.detail));
+          this.syncSubmitStatus();
+        },
+
+        reset: function(e) {
+          console.debug('reset requested: ', e);
+          if (!this.hasUploadsInProgress) {
+            // TODO: Need to stop current uploads, or only show reset once nothing is uploading.
+            this.set('step', 0);
+            this.set('headline', undefined);
+            this.set('author', undefined);
+            this.set('summary', undefined);
+            this.set('body', undefined);
+            this.set('files', []);
+            this.set('filesUploaded', []);
+          } else {
+            this.$.resetWarning.show();
+          }
+        },
+
+        hideWarning: function() {
+          this.$.resetWarning.hide();
+
+        },
+
+        syncSubmitStatus: function() {
+          this.set('hasMedia', !_.isEmpty(this.files));
+          this.set('canSubmit', this.hasCompletedUploads && this.hasHeadline);
+          this.$.postButton.toggleClass('enabled', this.hasCompletedUploads && this.hasHeadline);
+        },
+
+        handleFiles: function(e) {
+          console.info('handleFiles: ', e.target.files.length);
+
+          const supported = (file) => (/^image\/.*/.test(file.type) || /^audio\/.*/.test(file.type) || /video\/.*/.test(file.type));
+
+          const pushIfSupported = file => to => {
+            if (supported(file)) {
+              to.push('files', file);
+            }
+          };
+
+          for (var i = 0; i < e.target.files.length; i++) {
+            pushIfSupported(e.target.files[i])(this);
+          }
+
+          this.syncSubmitStatus();
+        },
+      });
+    })();
+  </script>
+</dom-module>

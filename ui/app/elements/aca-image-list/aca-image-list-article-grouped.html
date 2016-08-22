@@ -1,0 +1,215 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="aca-image-list-article-grouped">
+
+
+  <style>
+
+    :host {
+      display: block;
+      z-index: 100;
+    }
+
+    paper-material {
+      padding: 1em;
+      margin: 0.5em;
+    }
+
+  </style>
+
+  <template>
+    <style include="shared-styles"></style>
+
+    <div style="display:block;">
+      <span class="flex">
+        <paper-icon-button toggle icon="apps" disabled="[[!hasSelection]]" on-click="toggleShowSelection"></paper-icon-button>
+      </span>
+    </div>
+
+
+
+    <template id="articles" is="dom-repeat" items="[[articles]]" as="article">
+
+      <paper-card class="block-with-margin">
+        <div class="card-content">
+          <div class="title">
+            <div class="medium">[[heading(article.metaData)]]</div>
+            <div class="small">Published on [[dateFromLong(article.metaData.publishDate)]] [[byLine(article.metaData.author)]]</div>
+          </div>
+
+          <template id="images" is="dom-repeat" items="[[article.mediaItems]]" as="image">
+            <aca-image-item selected="[[image.selected]]" config="[[config]]" item="[[getMediaItemReferenceAt(image, 0)]]" on-click="toggleItem"></aca-image-item>
+          </template>
+        </div>
+      </paper-card>
+
+    </template>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'aca-image-list-article-grouped',
+        properties: {
+          config: {
+            type: Object
+          },
+          item: {
+            type: String,
+            value: '(not set)'
+          },
+          articles: {
+            type: Array
+          },
+          title: {
+            type: String,
+            value: 'Results'
+          },
+          showResultCount: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          seltd: {
+            type: Object,
+            value: function() {return [];},
+            //readOnly: true,
+            reflectToAttribute: true,
+            //notify: true
+          },
+          canShowCopy: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          canSendToInitiator: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          hasSelection: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          showSelection: {
+            type: Boolean,
+            value: false,
+            notify: true
+          }
+        },
+
+        observers: [
+          'selectedChanged(selected.*)', 'selectedChanged(seltd.*)'
+        ],
+
+        getMediaItemReferenceAt: function(mediaItem, idx) {
+          var reference = mediaItem.references[idx];
+          return {
+            caption: mediaItem.caption,
+            altText: reference.alternateText,
+            imageURL: reference.imageURL,
+            width: reference.width,
+            height: reference.height,
+            mimeType: reference.mimeType,
+            source: reference.imageSource,
+            selected: false
+          };
+        },
+
+        toggleItem: function(e) {
+
+          var image = e.model.image;
+          console.log('toggle image: ', image);
+
+          image.selected = !image.selected;
+
+          if (image.selected) {
+            this._addItem(image);
+          } else {
+            this._removeItem(image);
+          }
+
+          e.model.set('image.selected', e.model.image.selected);
+
+          var tmp = this.setld;
+          this.setld = [];
+          this.setld = tmp;
+          this.selected = tmp;
+          this.notifyPath('setld', this.setld);
+          this.notifyPath('selected', this.setld);
+          Polymer.dom.flush();
+        },
+        _removeItem: function(toRemove) {
+          var index = this.seltd.indexOf(toRemove);
+          this.splice('seltd', index, 1);
+        },
+        _addItem: function(toAdd) {
+          this.push('seltd', toAdd);
+        },
+        hasSelection: function() {
+          var hasSelection = this.seltd.length > 0;
+          console.log('hasSelection: "', hasSelection);
+          return hasSelection;
+        },
+
+        /**
+         * This will return the selected items back to the parent window.
+        */
+        sendToInitiator: function() {
+          if (window.opener) {
+            var message = JSON.stringify({
+              request: 'selected',
+              items: this.selected
+            });
+            if (message) {
+              console.info('sending selected: %s', message);
+              window.opener.postMessage(message, '*');
+            } else {
+              console.warn('no value to send.');
+            }
+          } else {
+            console.error('Can not send message. Window has no opener.');
+          }
+        },
+        _itemAsString: function(item) {
+          return JSON.stringify(item, null, '   ');
+        },
+        heading: function(metaData) {
+          if (metaData.abstractSummary) {
+            return metaData.abstractSummary;
+          } else {
+            return 'No Heading';
+          }
+        },
+        dateFromLong: function(longDate) {
+          return new Date(longDate).toDateString();
+        },
+        byLine: function(author) {
+          return author ? 'by ' + author : '';
+        },
+        itemsForSelection: function(itemsForSelection) {
+          var r = this;
+          itemsForSelection.forEach(function(item) {
+            console.log('itemForSelection: ', r.getMediaItemReferenceAt(item.mediaItems[0], 0));
+          });
+        },
+        selectedChanged: function(ch) {
+          console.log('ch: ', ch);
+          if (ch.path === 'seltd.length') {
+            this.hasSelection = ch.value > 0;
+            var data = ch.base;
+            this.fire('iron-signal', {name: 'selection-changed', data: data});
+          }
+        },
+        toggleShowSelection: function() {
+          console.log('toggleShowSelection');
+          this.showSelection = !this.showSelection;
+        }
+      });
+    })();
+  </script>
+</dom-module>

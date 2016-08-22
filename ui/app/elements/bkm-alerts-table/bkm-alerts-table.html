@@ -1,0 +1,59 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="bkm-alerts-table">
+
+    <template>
+
+        <style>
+         td {
+             margin: 0;
+             padding: 7px;
+         }
+
+         th {
+             padding: 7px;
+             background-color: #efefef;
+         }
+
+         table {
+             width: 100%;
+             border-spacing: 0;
+             border: 1px solid #ccc;
+         }
+
+         tr:nth-child(odd) {
+             background-color: #f7f7f7;
+         }
+        </style>
+
+        <content></content>
+
+        <table>
+            <tr><th>Date</th><th>Message</th></tr>
+            <template is="dom-repeat" items="[[items]]">
+                <tr><td>[[date(item.date)]]</td><td>[[item.message]]</td></tr>
+            </template>
+        </table>
+    </template>
+
+    <script>
+        class BkmAlertsTable {
+          beforeRegister() {
+            this.is = 'bkm-alerts-table';
+
+            this.properties = {
+              items: {
+                type: Array,
+                value: [{id: null, date: 'xxx', message: 'yyy'}]
+              }
+            };
+          }
+
+          date(asLong) {
+            return new Date(asLong).toDateString();
+          }
+        }
+        Polymer(BkmAlertsTable);
+    </script>
+
+</dom-module>
