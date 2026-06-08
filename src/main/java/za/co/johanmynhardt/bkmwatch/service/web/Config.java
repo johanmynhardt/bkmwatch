@@ -17,7 +17,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.derby.jdbc.EmbeddedDriver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,19 +66,11 @@ public class Config extends WebMvcConfigurerAdapter {
         return dataSource;
     }*/
 
-    @Bean(destroyMethod = "shutdown")
+    @Bean(destroyMethod = "close")
     public DataSource getDataSource(@Value("${dbUrl}") String dbUrl) {
-
-        try {
-            Class.forName("org.apache.derby.jdbc.EmbeddedConnectionPoolDataSource");
-            DriverManager.registerDriver(new EmbeddedDriver());
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException(e);
-        }
-
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(dbUrl);
-        config.setDriverClassName("org.apache.derby.jdbc.EmbeddedConnectionPoolDataSource");
+        config.setDriverClassName("org.apache.derby.jdbc.AutoloadedDriver");
 
         return new HikariDataSource(config);
     }
