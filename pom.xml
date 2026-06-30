@@ -15,7 +15,7 @@
         
         <!-- Dependency Versions -->
         <spring.version>5.3.39</spring.version>
-        <jackson.version>2.17.2</jackson.version>
+        <jackson.version>2.22.0</jackson.version>
         <derby.version>10.16.1.1</derby.version>
         <guava.version>33.2.1-jre</guava.version>
         <hikaricp.version>5.1.0</hikaricp.version>
